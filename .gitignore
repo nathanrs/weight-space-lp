@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+cache/
+models/
+results/**/acts/
+*.npy
+*.safetensors
+third_party/
