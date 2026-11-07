@@ -1,0 +1,18 @@
+{
+ "name": "realshift_d2_k8",
+ "note": "acts_fitgen_real_eps1.0_d2 k=8",
+ "layers": {
+  "15": {
+   "nnz_v": 8,
+   "changed_weights_bf16": 7975,
+   "changed_columns": 8,
+   "rel_frobenius": 0.03787786141037941
+  },
+  "19": {
+   "nnz_v": 8,
+   "changed_weights_bf16": 8081,
+   "changed_columns": 8,
+   "rel_frobenius": 0.03799143061041832
+  }
+ }
+}

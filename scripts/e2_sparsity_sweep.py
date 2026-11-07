@@ -1,6 +1,6 @@
 """E2 sparsity sweep: exactly-k-neuron LP edits (L1 path -> top-k by |v_j|*std(h_j) -> re-solve on that support).
 
-  python scripts/e2_sparsity_sweep.py <eps> <k1,k2,...> [acts_name] [u_source: astra|real]
+  python scripts/e2_sparsity_sweep.py <eps> <k1,k2,...> [acts_name] [u_source: astra|real] [delta_mult]
 Writes cache/sweep_<tag>_L{l}_k{k}.npy and results/e2/sweep_<tag>.json with held-out diagnostics.
 """
 import json
@@ -16,7 +16,8 @@ eps = float(sys.argv[1])
 ks = [int(x) for x in sys.argv[2].split(",")]
 name = sys.argv[3] if len(sys.argv) > 3 else "acts_released"
 usrc = sys.argv[4] if len(sys.argv) > 4 else "astra"
-tag = f"{name}_{usrc}_eps{eps}"
+mult = float(sys.argv[5]) if len(sys.argv) > 5 else 4.0   # real-u only: push loop tokens mult x their excess
+tag = f"{name}_{usrc}_eps{eps}" + (f"_d{mult:g}" if mult != 4.0 else "")
 H, RES, meta = acts.load(name)
 lab, ho = meta["label"], meta["heldout"]
 rng = np.random.default_rng(0)
@@ -33,7 +34,7 @@ for l in (15, 19):
         u = R[fitR].mean(0) - R[fitP].mean(0); u /= np.linalg.norm(u)
         wu = u @ base_tensor(down_proj(l))
         s = h @ wu
-        delta = float(4.0 * (s[fitR].mean() - s[fitP].mean()))  # push loop tokens 4x their excess below normal
+        delta = float(mult * (s[fitR].mean() - s[fitP].mean()))  # push loop tokens mult x their excess below normal
     iR = rng.choice(np.flatnonzero(fitR), min(4000, fitR.sum()), replace=False)
     iP = rng.choice(np.flatnonzero(fitP), min(8000, fitP.sum()), replace=False)
     base_spec = lp.Spec(delta_R=np.full(len(iR), delta), eps=eps, C=10.0)
