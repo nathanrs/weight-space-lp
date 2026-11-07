@@ -1,0 +1,18 @@
+{
+ "name": "realsel_k512",
+ "note": "acts_fitgen_real_eps0.25 k=512",
+ "layers": {
+  "15": {
+   "nnz_v": 512,
+   "changed_weights_bf16": 510220,
+   "changed_columns": 512,
+   "rel_frobenius": 0.18781247735023499
+  },
+  "19": {
+   "nnz_v": 512,
+   "changed_weights_bf16": 515062,
+   "changed_columns": 512,
+   "rel_frobenius": 0.25937607884407043
+  }
+ }
+}

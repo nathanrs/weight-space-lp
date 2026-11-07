@@ -1,0 +1,53 @@
+{
+ "eps": 0.25,
+ "acts": "acts_fitgen",
+ "u": "real",
+ "layers": {
+  "15": {
+   "delta": 0.5726842880249023,
+   "rows": [
+    {
+     "k": 64,
+     "overlap_astra64": 6,
+     "P": -0.179,
+     "R_onset": -0.278,
+     "R_during": -0.503,
+     "P_abs_p90": 0.433,
+     "R_during_hit": 0.341
+    },
+    {
+     "k": 512,
+     "overlap_astra64": 19,
+     "P": -0.126,
+     "R_onset": -0.283,
+     "R_during": -0.59,
+     "P_abs_p90": 0.437,
+     "R_during_hit": 0.532
+    }
+   ]
+  },
+  "19": {
+   "delta": 0.7976030111312866,
+   "rows": [
+    {
+     "k": 64,
+     "overlap_astra64": 1,
+     "P": -0.208,
+     "R_onset": -0.371,
+     "R_during": -0.617,
+     "P_abs_p90": 0.564,
+     "R_during_hit": 0.214
+    },
+    {
+     "k": 512,
+     "overlap_astra64": 12,
+     "P": -0.161,
+     "R_onset": -0.375,
+     "R_during": -0.751,
+     "P_abs_p90": 0.584,
+     "R_during_hit": 0.435
+    }
+   ]
+  }
+ }
+}
