@@ -11,6 +11,13 @@ envs:
   HF_HUB_ENABLE_HF_TRANSFER: "1"
 setup: |
   set -e
+  # Lambda images ship driver 570 (CUDA 12.8); current vLLM wheels need CUDA 13 -> NVIDIA forward-compat libs.
+  if [ ! -d /usr/local/cuda-13.0/compat ]; then
+    . /etc/os-release; cd /tmp
+    wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${VERSION_ID//./}/x86_64/cuda-keyring_1.1-1_all.deb
+    sudo dpkg -i cuda-keyring_1.1-1_all.deb && sudo apt-get update -q && sudo apt-get install -y -q cuda-compat-13-0
+    cd -
+  fi
   command -v uv || curl -LsSf https://astral.sh/uv/install.sh | sh
   export PATH=$HOME/.local/bin:$PATH
   uv venv -p 3.12 --allow-existing ~/venv
@@ -20,6 +27,7 @@ setup: |
   python -c "import vllm, transformers; print('vllm', vllm.__version__, 'transformers', transformers.__version__)"
 run: |
   set -e
+  export LD_LIBRARY_PATH=/usr/local/cuda-13.0/compat:${LD_LIBRARY_PATH:-}
   export PATH=$HOME/.local/bin:$PATH
   source ~/venv/bin/activate
   nvidia-smi --query-gpu=name,memory.total --format=csv

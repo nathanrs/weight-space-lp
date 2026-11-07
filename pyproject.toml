@@ -12,6 +12,8 @@ dependencies = [
   "highspy",
   "huggingface_hub",
   "tqdm",
+  "datasets>=5.1.0",
+  "scikit-learn>=1.9.1",
 ]
 
 [project.optional-dependencies]
