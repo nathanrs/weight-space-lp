@@ -1,0 +1,35 @@
+{
+ "eps": 1.0,
+ "acts": "acts_fitgen",
+ "u": "real",
+ "layers": {
+  "15": {
+   "delta": 0.28634214401245117,
+   "rows": [
+    {
+     "k": 8,
+     "overlap_astra64": 2,
+     "P": -0.546,
+     "R_onset": -0.602,
+     "R_during": -0.627,
+     "P_abs_p90": 0.709,
+     "R_during_hit": 1.0
+    }
+   ]
+  },
+  "19": {
+   "delta": 0.3988015055656433,
+   "rows": [
+    {
+     "k": 8,
+     "overlap_astra64": 2,
+     "P": -0.619,
+     "R_onset": -0.637,
+     "R_during": -0.651,
+     "P_abs_p90": 0.773,
+     "R_during_hit": 0.996
+    }
+   ]
+  }
+ }
+}
