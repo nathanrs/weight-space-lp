@@ -53,3 +53,26 @@
 | shift_k8 − astra_p50c | +0.8 (1.1) | 500 |
 | realshift_k8 − astra_p50c | -3.1 (1.1) | 500 |
 | realshift_k8 − shift_k8 | -3.9 (1.1) | 500 |
+
+## IFEval (541 prompts, think35, 1 sample; lm-eval port of the official checkers; response = text after last </think>)
+
+| Model | Prompt strict | Prompt loose | Inst strict | Inst loose | Cut % | Mean tokens |
+|---|---|---|---|---|---|---|
+| base | 22.9 | 23.1 | 21.0 | 21.1 | 73.4 | 24,940 |
+| astra_p50c | 61.9 | 64.5 | 71.5 | 73.9 | 1.7 | 4,052 |
+| shift_k8 | 59.7 | 63.6 | 67.0 | 70.3 | 5.7 | 4,349 |
+| realshift_k8 | 60.4 | 63.6 | 65.3 | 67.6 | 11.8 | 7,280 |
+
+Base fails IFEval mostly by looping inside its thinking (73% cut → empty response); every edit fixes that and lands
+at ~60% strict, within ~1 SE (≈2.1 pp) of each other. No sign the edits damage instruction following.
+
+## Blind push strength (dev_a, realshift k=8; δ = mult × loop-token excess along u)
+
+| mult | GSM8K | MATH | Pooled | Cut % |
+|---|---|---|---|---|
+| 2× | 62.5 | 46.9 | 54.7 | 37.5 |
+| 4× (realshift_k8) | 62.5 | 46.9 | 54.7 | 36.7 |
+| 8× (target only ~25% reachable at k=8) | 64.1 | 46.9 | 55.5 | 37.5 |
+
+Flat: the blind edit's gap to Astra's direction (and its higher cut rate) is not a push-strength problem; it comes
+from the direction u itself (cos ≈ 0.6 to Astra's).
