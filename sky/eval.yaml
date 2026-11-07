@@ -1,0 +1,26 @@
+# Generic GPU eval box: syncs the repo, installs vLLM, runs JOB (a script under scripts/gpu/).
+#   sky launch -c wslp sky/eval.yaml --env JOB=scripts/gpu/e0_job.sh -i 20 --down -y
+name: wslp-eval
+resources:
+  infra: lambda
+  accelerators: H100:1
+  disk_size: 200
+workdir: .
+envs:
+  JOB: scripts/gpu/e0_job.sh
+  HF_HUB_ENABLE_HF_TRANSFER: "1"
+setup: |
+  set -e
+  command -v uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH=$HOME/.local/bin:$PATH
+  uv venv -p 3.12 --allow-existing ~/venv
+  source ~/venv/bin/activate
+  uv pip install vllm math-verify datasets hf_transfer highspy
+  uv pip install -e . --no-deps
+  python -c "import vllm, transformers; print('vllm', vllm.__version__, 'transformers', transformers.__version__)"
+run: |
+  set -e
+  export PATH=$HOME/.local/bin:$PATH
+  source ~/venv/bin/activate
+  nvidia-smi --query-gpu=name,memory.total --format=csv
+  bash $JOB

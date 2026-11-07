@@ -7,3 +7,4 @@ results/**/acts/
 *.npy
 *.safetensors
 third_party/
+ckpts/

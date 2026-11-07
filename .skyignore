@@ -1,0 +1,8 @@
+.venv/
+.git/
+models/
+cache/
+third_party/
+results/
+ckpts/
+__pycache__/
