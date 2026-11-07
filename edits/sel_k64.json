@@ -1,0 +1,18 @@
+{
+ "name": "sel_k64",
+ "note": "acts_fitgen_astra_eps0.25 k=64",
+ "layers": {
+  "15": {
+   "nnz_v": 64,
+   "changed_weights_bf16": 64720,
+   "changed_columns": 64,
+   "rel_frobenius": 0.20341530442237854
+  },
+  "19": {
+   "nnz_v": 64,
+   "changed_weights_bf16": 64738,
+   "changed_columns": 64,
+   "rel_frobenius": 0.20092356204986572
+  }
+ }
+}

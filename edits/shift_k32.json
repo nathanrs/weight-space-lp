@@ -1,0 +1,18 @@
+{
+ "name": "shift_k32",
+ "note": "acts_fitgen_astra_eps1.0 k=32",
+ "layers": {
+  "15": {
+   "nnz_v": 32,
+   "changed_weights_bf16": 32354,
+   "changed_columns": 32,
+   "rel_frobenius": 0.08322577178478241
+  },
+  "19": {
+   "nnz_v": 32,
+   "changed_weights_bf16": 32573,
+   "changed_columns": 32,
+   "rel_frobenius": 0.28740811347961426
+  }
+ }
+}
