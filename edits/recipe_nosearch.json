@@ -1,0 +1,18 @@
+{
+ "name": "recipe_nosearch",
+ "note": "",
+ "layers": {
+  "15": {
+   "nnz_v": 64,
+   "changed_weights_bf16": 65294,
+   "changed_columns": 64,
+   "rel_frobenius": 0.08135548233985901
+  },
+  "19": {
+   "nnz_v": 64,
+   "changed_weights_bf16": 64858,
+   "changed_columns": 64,
+   "rel_frobenius": 0.08052658289670944
+  }
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "name": "random_ctrl",
+ "note": "",
+ "layers": {
+  "15": {
+   "nnz_v": 64,
+   "changed_weights_bf16": 65129,
+   "changed_columns": 64,
+   "rel_frobenius": 0.10635093599557877
+  },
+  "19": {
+   "nnz_v": 64,
+   "changed_weights_bf16": 65156,
+   "changed_columns": 64,
+   "rel_frobenius": 0.08105767518281937
+  }
+ }
+}

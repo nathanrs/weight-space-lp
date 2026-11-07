@@ -1,0 +1,18 @@
+{
+ "name": "lp_shift",
+ "note": "",
+ "layers": {
+  "15": {
+   "nnz_v": 328,
+   "changed_weights_bf16": 294106,
+   "changed_columns": 328,
+   "rel_frobenius": 0.05383880436420441
+  },
+  "19": {
+   "nnz_v": 518,
+   "changed_weights_bf16": 478146,
+   "changed_columns": 518,
+   "rel_frobenius": 0.05726166069507599
+  }
+ }
+}

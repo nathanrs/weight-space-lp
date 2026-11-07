@@ -1,0 +1,18 @@
+{
+ "name": "lp_sel",
+ "note": "",
+ "layers": {
+  "15": {
+   "nnz_v": 601,
+   "changed_weights_bf16": 585314,
+   "changed_columns": 601,
+   "rel_frobenius": 0.11265955120325089
+  },
+  "19": {
+   "nnz_v": 724,
+   "changed_weights_bf16": 699501,
+   "changed_columns": 724,
+   "rel_frobenius": 0.12530219554901123
+  }
+ }
+}
