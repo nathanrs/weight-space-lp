@@ -2,7 +2,8 @@
 checkers. The scored response is the text after the last </think>; a response cut inside the thinking scores empty.
 
   python -m wslp.eval.run_ifeval <ckpt> <out> [--max-tokens 32768]
-Writes <out>/scores.json ({"ifeval": {...}}) and <out>/ifeval_samples.jsonl.gz.
+Writes <out>/scores.json ({"ifeval": {...}}), <out>/ifeval_per_problem.json (prompt-level strict as "correct")
+and <out>/ifeval_samples.jsonl.gz.
 """
 import argparse
 import gzip
@@ -38,6 +39,7 @@ def main():
     agg = {"prompt_level_strict_acc": [], "prompt_level_loose_acc": [], "inst_level_strict_acc": [],
            "inst_level_loose_acc": []}
     cut = toks = 0
+    per = []
     with gzip.open(os.path.join(a.out, "ifeval_samples.jsonl.gz"), "wt") as f:
         for d, o in zip(docs, outs):
             s = o.outputs[0]
@@ -45,10 +47,13 @@ def main():
             r = U.process_results(d, [resp])
             for k in agg:
                 agg[k] += r[k] if isinstance(r[k], list) else [r[k]]
+            per.append({"id": d["key"], "correct": [int(r["prompt_level_strict_acc"])],
+                        "loose": [int(r["prompt_level_loose_acc"])], "cut": s.finish_reason == "length"})
             cut += s.finish_reason == "length"
             toks += len(s.token_ids)
             f.write(json.dumps({"key": d["key"], "cut": s.finish_reason == "length", "tokens": len(s.token_ids),
                                 **{k: r[k] for k in agg}, "response": resp, "text": s.text}) + "\n")
+    json.dump(per, open(os.path.join(a.out, "ifeval_per_problem.json"), "w"))
     n = len(docs)
     res = {"_protocol": {"sampling": sampling, "ckpt": a.ckpt},
            "ifeval": {**{k: sum(v) / len(v) for k, v in agg.items()}, "acc": sum(agg["prompt_level_strict_acc"]) / n,

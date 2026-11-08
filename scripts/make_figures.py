@@ -1,7 +1,5 @@
 """README figures from results/gpu: (1) dev accuracy vs. changed weights, (2) finalist benchmarks with paired SEs."""
-import gzip
 import json
-from collections import defaultdict
 
 import matplotlib
 
@@ -9,9 +7,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+from wslp.eval.results import mean_acc
 from wslp.paths import ROOT
 
-G, OUT = ROOT / "results/gpu", ROOT / "results/figures"
+OUT = ROOT / "results/figures"
 OUT.mkdir(exist_ok=True)
 ASTRA_W = 130188
 
@@ -22,17 +21,8 @@ def weights(name):
     return sum(v["changed_weights_bf16"] for v in json.load(open(ROOT / f"edits/{name}.json"))["layers"].values())
 
 
-def per_problem(dirs, key="correct"):
-    c = defaultdict(list)
-    for d in dirs:
-        for f in (G / d).glob("*_samples.jsonl.gz"):
-            for r in map(json.loads, gzip.open(f)):
-                c[r.get("id", r.get("key"))].append(float(r[key]))
-    return {i: np.mean(v) for i, v in c.items()}
-
-
 def dev_acc(name):
-    return 100 * np.mean(list(per_problem([f"dev_a_{name}"]).values()))
+    return 100 * np.mean(list(mean_acc(f"dev_a_{name}").values()))
 
 
 # ---- figure 1: dev_a accuracy vs changed weights
@@ -79,7 +69,7 @@ for j, (b, pat) in enumerate(BENCH.items()):
     data = {}
     for m, _, _ in MODELS:
         dirs = MATH[m] if pat is None else [pat.format(m)]
-        data[m] = per_problem(dirs, "prompt_level_strict_acc" if pat and pat.startswith("ifeval") else "correct")
+        data[m] = mean_acc(dirs)  # IFEval per-problem "correct" = prompt-level strict
     ref = data["astra_p50c"]
     for i, (m, label, col) in enumerate(MODELS):
         v = np.array(list(data[m].values()))

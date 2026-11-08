@@ -8,3 +8,12 @@ results/**/acts/
 *.safetensors
 third_party/
 ckpts/
+
+# raw generations: big, kept locally (scores.json + *_per_problem.json are tracked and drive all tables/figures).
+# Exception: the base-model traces the LP is fit on.
+results/gpu/**/*_samples.jsonl.gz
+!results/gpu/e1_base_fitgen/*_samples.jsonl.gz
+results/logs/
+# copied from MIT's Experiment 8 logs by scripts/fetch_exp8.sh
+data/practice/
+data/model_text/
