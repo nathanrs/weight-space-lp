@@ -157,7 +157,7 @@ src/wslp/      lp.py (LP-A, cutting planes, PDHG) · astra.py · collect.py · l
 scripts/       e0_* reproduce · e1_* activations · e2_* LP sweep · e3_overlap · benchmark_tables · make_figures · gpu/ cloud jobs
 edits/         every evaluated edit (.json metadata; .safetensors are gitignored, rebuilt by the scripts)
 steer/         steering vectors
-results/       reproduction/ · dev_sweep/ · benchmarks/ · analysis/ · figures/ · gpu/ (raw samples) · spend.md
+results/       reproduction/ · dev_sweep/ · benchmarks/ · analysis/ · figures/ · gpu/ (per-run scores) · spend.md
 docs/PLAN.md   the original plan, with a status box
 ```
 
