@@ -1,7 +1,7 @@
 """E2 sparsity sweep: exactly-k-neuron LP edits (L1 path -> top-k by |v_j|*std(h_j) -> re-solve on that support).
 
   python scripts/e2_sparsity_sweep.py <eps> <k1,k2,...> [acts_name] [u_source: astra|real] [delta_mult]
-Writes cache/sweep_<tag>_L{l}_k{k}.npy and results/e2/sweep_<tag>.json with held-out diagnostics.
+Writes cache/sweep_<tag>_L{l}_k{k}.npy and results/dev_sweep/sweep_<tag>.json with held-out diagnostics.
 """
 import json
 import sys
@@ -56,5 +56,5 @@ for l in (15, 19):
         np.save(CACHE / f"sweep_{tag}_L{l}_k{k}.npy", np.stack([np.pad(u, (0, len(r.v) - len(u))), r.v]))
         print(f"L{l}", json.dumps(row), flush=True)
     report["layers"][l] = {"delta": delta, "rows": rows}
-(RESULTS / "e2").mkdir(parents=True, exist_ok=True)
-json.dump(report, open(RESULTS / f"e2/sweep_{tag}.json", "w"), indent=1)
+(RESULTS / "dev_sweep").mkdir(parents=True, exist_ok=True)
+json.dump(report, open(RESULTS / f"dev_sweep/sweep_{tag}.json", "w"), indent=1)

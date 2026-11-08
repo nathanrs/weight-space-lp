@@ -47,5 +47,5 @@ for l in (15, 19):
     print(f"L{l}", json.dumps(rows, indent=1))
 for name, d in steer.items():
     np.savez(ROOT / "steer" / f"{name}.npz", **d)
-(RESULTS / "e3").mkdir(exist_ok=True)
-json.dump(out, open(RESULTS / "e3/overlap.json", "w"), indent=1)
+(RESULTS / "analysis").mkdir(exist_ok=True)
+json.dump(out, open(RESULTS / "analysis/overlap.json", "w"), indent=1)

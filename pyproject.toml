@@ -26,5 +26,10 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/wslp"]
 
+[dependency-groups]
+dev = [
+    "matplotlib>=3.11.2",
+]
+
 [project.entry-points."vllm.general_plugins"]
 wslp_steer = "wslp.eval.steer:register"

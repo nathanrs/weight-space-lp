@@ -44,5 +44,5 @@ for bench, models in RUNS.items():
     out.append("")
 txt = "\n".join(out)
 print(txt)
-(ROOT / "results/e3").mkdir(exist_ok=True)
-open(ROOT / "results/e3/FINALISTS.md", "w").write(txt)
+(ROOT / "results/benchmarks").mkdir(exist_ok=True)
+open(ROOT / "results/benchmarks/README.md", "w").write(txt)

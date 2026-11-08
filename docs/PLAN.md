@@ -1,5 +1,24 @@
 # weight-space-lp: implementation plan
 
+> **Status (2026-11-07).** This is the plan as written before any experiment ran, kept unedited below this box as a
+> record. Results and the write-up are in the [README](../README.md); numbers live in [`results/`](../results/).
+>
+> | Item | Status | What actually happened |
+> |---|---|---|
+> | E0 reproduce | **done**, all gates pass | sha256 rebuild, rank-1, u re-derived (cos 1.0000), TF metric −0.1032 vs −0.1031; harness: MATH-500 Astra 50.0 / base 7.0 (×1 sample; logs 48.1 / 7.9 ×4). [results/reproduction](../results/reproduction/README.md) |
+> | E1 data | **done**, changed | Activations from MIT's 452 released base traces plus 512 of our own base generations on practice problems. Loop labels use 16-token windows and an 80%-duplicate rule. Cached only layers 15/19 (not all 24); no off-domain P_gen. |
+> | E2 sparsity sweep | **done**, changed | LP-A with a constant δ (Astra's mean suppression), not per-token. HiGHS IPM + cutting planes were too slow on dense rows → replaced by a PDHG (PDLP-style) solver on MPS/GPU. L15/L19 solved independently on base activations (no sequential recollection). The TF metric did **not** predict generation, so selection used dev generation only. [results/dev_sweep](../results/dev_sweep/README.md) |
+> | E3 overlap | **done** (partial) | LP supports barely overlap Astra's 64 (3/8 at L15, 1/8 at L19 for `shift_k8`). LP-B restricted to Astra's support not run. [overlap.json](../results/analysis/overlap.json) |
+> | E4 baselines | **partial** | Done: base, Astra, recipe-no-search, random control (at Astra's sparsity), steering vector. Not done: α-ablation sweep, ridge/L2, sampling penalties, LoRA. |
+> | E5 ablations | **partial** | Done: direction source (Astra's u vs. real-loop mean diff; not the probe direction), blind strength 2×/4×/8×. Not done: onset vs. during (all fits used R_during), single layer, blind layer choice, preservation set (IFEval checked instead). |
+> | E6 budget-matched pipeline | **not done** | |
+> | E7 stretch | **not done** | |
+> | Full finalist evals | **done** | MATH-500 ×4, GSM8K test ×2, IFEval ×1 (plan said ×2), plus 512 untouched practice problems. [results/benchmarks](../results/benchmarks/README.md) |
+> | Compute | | Measured ~7.2k generated tok/s on one H100 PCIe; ~18 H100-hours + ~1 A100-hour total, ~$65 ([spend](../results/spend.md)). |
+>
+> Kill criteria: none triggered. "Astra recipe, no search" reached 44.5 vs. Astra's 59.4 on dev, so the search
+> mattered, and the LP's claim rests on matching that with 8× fewer weights and one solve.
+
 **Thesis.** The MIT "weight-space programming" Experiment 8 edit (GPT-6 Astra fixing Qwen3.5-0.8B's thinking loops)
 is a rank-1 edit whose two free choices (which neurons, how much) can be posed as a linear program over cached
 activations. Diagnosis (direction + layers) is the hard part; compiling it into weights is a solver's job.

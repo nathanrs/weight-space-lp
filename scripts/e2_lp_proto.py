@@ -49,5 +49,5 @@ for eps in epss:
         runs.append(run)
         np.save(CACHE / f"lp_proto_L{layer}_eps{eps}_lam{lam}.npy", r.v)
         print(json.dumps(run), flush=True)
-(RESULTS / "e2").mkdir(parents=True, exist_ok=True)
-json.dump({"layer": layer, "delta": delta, "astra": astra, "runs": runs}, open(RESULTS / f"e2/lp_proto_L{layer}.json", "w"), indent=1)
+(RESULTS / "dev_sweep").mkdir(parents=True, exist_ok=True)
+json.dump({"layer": layer, "delta": delta, "astra": astra, "runs": runs}, open(RESULTS / f"dev_sweep/lp_proto_L{layer}.json", "w"), indent=1)
