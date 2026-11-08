@@ -1,0 +1,24 @@
+{
+ "_protocol": {
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "ckpt": "ckpts/realshift_k8"
+ },
+ "ifeval": {
+  "prompt_level_strict_acc": 0.6044362292051756,
+  "prompt_level_loose_acc": 0.6358595194085028,
+  "inst_level_strict_acc": 0.6534772182254197,
+  "inst_level_loose_acc": 0.6762589928057554,
+  "acc": 0.6044362292051756,
+  "cut_share": 0.11829944547134935,
+  "mean_tokens": 7280.022181146026,
+  "n_problems": 541,
+  "s": 537
+ }
+}

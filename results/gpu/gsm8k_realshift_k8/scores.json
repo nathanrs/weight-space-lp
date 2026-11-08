@@ -1,0 +1,26 @@
+{
+ "_protocol": {
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "ckpt": "ckpts/realshift_k8"
+ },
+ "gsm8k": {
+  "acc": 0.6535253980288097,
+  "cut_share": 0.23237300985595147,
+  "mean_tokens": 13505.24033358605,
+  "n_problems": 1319,
+  "samples": 2,
+  "ok": 1724,
+  "total": 2638,
+  "cut": 613,
+  "tokens_sum": 35626824,
+  "no_answer_finished": 7,
+  "s": 4789
+ }
+}

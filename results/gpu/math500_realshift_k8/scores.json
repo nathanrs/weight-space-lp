@@ -1,0 +1,26 @@
+{
+ "_protocol": {
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "ckpt": "ckpts/realshift_k8"
+ },
+ "math500": {
+  "acc": 0.478,
+  "cut_share": 0.4855,
+  "mean_tokens": 22300.8025,
+  "n_problems": 500,
+  "samples": 4,
+  "ok": 956,
+  "total": 2000,
+  "cut": 971,
+  "tokens_sum": 44601605,
+  "no_answer_finished": 8,
+  "s": 7269
+ }
+}

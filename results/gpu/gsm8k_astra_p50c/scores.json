@@ -1,0 +1,26 @@
+{
+ "_protocol": {
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "ckpt": "ckpts/astra_p50c"
+ },
+ "gsm8k": {
+  "acc": 0.6819560272934041,
+  "cut_share": 0.06557998483699773,
+  "mean_tokens": 11707.66413949962,
+  "n_problems": 1319,
+  "samples": 2,
+  "ok": 1799,
+  "total": 2638,
+  "cut": 173,
+  "tokens_sum": 30884818,
+  "no_answer_finished": 84,
+  "s": 3619
+ }
+}

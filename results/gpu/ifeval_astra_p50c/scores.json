@@ -1,0 +1,24 @@
+{
+ "_protocol": {
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "ckpt": "ckpts/astra_p50c"
+ },
+ "ifeval": {
+  "prompt_level_strict_acc": 0.6192236598890942,
+  "prompt_level_loose_acc": 0.6451016635859519,
+  "inst_level_strict_acc": 0.7146282973621103,
+  "inst_level_loose_acc": 0.7386091127098321,
+  "acc": 0.6192236598890942,
+  "cut_share": 0.0166358595194085,
+  "mean_tokens": 4051.6395563770793,
+  "n_problems": 541,
+  "s": 241
+ }
+}
