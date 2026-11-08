@@ -9,7 +9,9 @@ know the direction it acts along, choosing *which neurons and how much* is a lin
 
 Given Astra's direction and layers, **one LP solve (about a minute on a laptop) matches Astra's fix while changing 8×
 fewer weights**. With no LLM in the loop at all, using a direction measured from real loops, the same LP recovers
-about 93% of Astra's gain.
+about 93% of Astra's gain. A constant steering vector along the same direction, at the dose the LP picks, also
+matches, so the fix is essentially "push away from `u` by the right amount". The LP finds that amount in one solve
+and bakes it into ordinary weights.
 
 ![benchmarks](results/figures/benchmarks.png)
 
@@ -19,9 +21,10 @@ about 93% of Astra's gain.
 | Astra p50c (50-pass search) | 130,188 | 68.2 | 50.9 | 53.3 | 61.9 |
 | **LP `shift_k8`** (Astra's u, 8 neurons/layer) | **16,291** | **69.6** (+1.4 ± 0.9) | **51.7** (+0.8 ± 1.1) | **56.6** (+3.3 ± 1.9) | 59.7 (−2.2) |
 | **Blind LP `realshift_k8`** (no LLM) | 16,271 | 65.4 (−2.8 ± 0.9) | 47.8 (−3.1 ± 1.1) | 54.9 (+1.6 ± 1.9) | 60.4 (−1.5) |
-| Steering vector (no weight edit) ² | 0 | | STEER_MATH | | |
+| Steering vector, `shift_k8`'s mean write (no weight edit) ² | 0 | — | 50.8 ¹ (+0.8 ± 2.0) | — | — |
 
-Parentheses: paired difference vs. Astra ± SE. ¹ 1 sample. ² see [steering](#is-it-just-a-steering-vector).
+Parentheses: paired difference vs. Astra ± SE. ¹ 1 sample (steering: paired vs. Astra's seed-0 sample, A100).
+² see [steering](#is-it-just-a-steering-vector).
 All runs use the authors' `think35` protocol (vLLM, thinking on, T = 0.6, top-p 0.95, top-k 20, presence penalty 1.5,
 32,768 new tokens; last `\boxed{}` graded with math-verify).
 
@@ -64,7 +67,8 @@ HiGHS's optimum to within 0.2% in about a minute.
    Astra's recipe run once without its search.
 4. **Confirmed on untouched data** ([results/benchmarks](results/benchmarks/README.md)): 512 fresh practice problems,
    GSM8K test, MATH-500 ×4, IFEval.
-5. **Analysis and baselines**: neuron overlap, blind push strength, and a steering-vector baseline.
+5. **Analysis and baselines**: neuron overlap, blind push strength, and a steering-vector baseline
+   (it matches: see below).
 
 ![dev sweep](results/figures/dev_sweep.png)
 
@@ -77,6 +81,9 @@ HiGHS's optimum to within 0.2% in about a minute.
 - **The blind LP (no LLM) gets about 93% of the way.** It is about 3 points behind Astra on GSM8K test and MATH-500
   and ties it on IFEval. The gap is the direction, not the strength: the blind push at 2× / 4× / 8× scores
   54.7 / 54.7 / 55.5 on dev. The real-loop direction has cos ≈ 0.6 with Astra's.
+- **A plain steering vector does the same job.** Adding the edit's mean write as a constant vector gets 50.8 on
+  MATH-500 (Astra 50.0), so the per-token structure adds little. The LP's value is choosing the dose in one solve and
+  compiling it into 8 ordinary neurons per layer.
 - **The fix is bias-like.** Fewer neurons was better (8 > 32 > 128). Edits restricted to fire only on loops did no
   better than a near-constant push. At layer 15 the LP's 8 neurons are active on 89% of tokens (median neuron:
   16%), and their push has a coefficient of variation of 0.17 (Astra's: 1.1). Loops are linearly detectable once
@@ -90,7 +97,24 @@ HiGHS's optimum to within 0.2% in about a minute.
 
 ### Is it just a steering vector?
 
-STEER_SECTION
+Mostly, yes. Since the LP's best edit acts almost like a constant, we added its **mean** residual write
+(`mean_t(v·h_t) · u`, norm 0.89 at L15 and 0.67 at L19) as a fixed vector to the *unedited* model at layers 15 and 19,
+through a small vLLM plugin ([`src/wslp/eval/steer.py`](src/wslp/eval/steer.py)):
+
+| Steering (unedited model) | Dev acc (128) | MATH-500 ×1 |
+|---|---|---|
+| 0.5 × `shift_k8` mean write | 51.6 | |
+| **1 × `shift_k8` mean write** | **57.8** | **50.8** (Astra 50.0, `shift_k8` 53.2 on the same seed) |
+| 2 × `shift_k8` mean write | 31.2 (loops stop, reasoning breaks) | |
+| 1 × Astra's mean write | 57.0 | |
+| *for reference: `shift_k8` weight edit / Astra / base* | *62.5 / 59.4 / 10.9* | |
+
+A constant push along `u` recovers essentially the whole fix: within noise of Astra and of `shift_k8`
+(−2.4 ± 1.9 vs. `shift_k8` on MATH-500). The strength matters and the window is narrow: half is too weak, double
+breaks reasoning. So the honest framing is that **the diagnosis is the direction `u` and the dose**, and the
+per-token variation of the edit adds little or nothing. What the LP contributes is (a) choosing the dose from data in
+one solve, with no search, and (b) compiling that push into 8 neurons per layer of ordinary weights, so the fix ships
+inside a standard checkpoint, with no inference-time hooks. Astra's search found the same dose by trial and error.
 
 ## Caveats
 
@@ -137,7 +161,7 @@ results/       reproduction/ · dev_sweep/ · benchmarks/ · analysis/ · figure
 docs/PLAN.md   the original plan, with a status box
 ```
 
-**Compute:** about 18 H100-hours and 1 A100-hour on Lambda via SkyPilot, about $65 total ([ledger](results/spend.md)).
+**Compute:** about 18 H100-hours and 1.5 A100-hours on Lambda via SkyPilot, about $63 total ([ledger](results/spend.md)).
 LP solves and activation caching ran on an M1 Pro.
 
 ## Credit

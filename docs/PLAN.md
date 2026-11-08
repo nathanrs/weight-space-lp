@@ -9,12 +9,12 @@
 > | E1 data | **done**, changed | Activations from MIT's 452 released base traces plus 512 of our own base generations on practice problems. Loop labels use 16-token windows and an 80%-duplicate rule. Cached only layers 15/19 (not all 24); no off-domain P_gen. |
 > | E2 sparsity sweep | **done**, changed | LP-A with a constant δ (Astra's mean suppression), not per-token. HiGHS IPM + cutting planes were too slow on dense rows → replaced by a PDHG (PDLP-style) solver on MPS/GPU. L15/L19 solved independently on base activations (no sequential recollection). The TF metric did **not** predict generation, so selection used dev generation only. [results/dev_sweep](../results/dev_sweep/README.md) |
 > | E3 overlap | **done** (partial) | LP supports barely overlap Astra's 64 (3/8 at L15, 1/8 at L19 for `shift_k8`). LP-B restricted to Astra's support not run. [overlap.json](../results/analysis/overlap.json) |
-> | E4 baselines | **partial** | Done: base, Astra, recipe-no-search, random control (at Astra's sparsity), steering vector. Not done: α-ablation sweep, ridge/L2, sampling penalties, LoRA. |
+> | E4 baselines | **partial** | Done: base, Astra, recipe-no-search, random control (at Astra's sparsity), steering vector (matches the edits: MATH-500 50.8 vs. Astra 50.0). Not done: α-ablation sweep, ridge/L2, sampling penalties, LoRA. |
 > | E5 ablations | **partial** | Done: direction source (Astra's u vs. real-loop mean diff; not the probe direction), blind strength 2×/4×/8×. Not done: onset vs. during (all fits used R_during), single layer, blind layer choice, preservation set (IFEval checked instead). |
 > | E6 budget-matched pipeline | **not done** | |
 > | E7 stretch | **not done** | |
 > | Full finalist evals | **done** | MATH-500 ×4, GSM8K test ×2, IFEval ×1 (plan said ×2), plus 512 untouched practice problems. [results/benchmarks](../results/benchmarks/README.md) |
-> | Compute | | Measured ~7.2k generated tok/s on one H100 PCIe; ~18 H100-hours + ~1 A100-hour total, ~$65 ([spend](../results/spend.md)). |
+> | Compute | | Measured ~7.2k generated tok/s on one H100 PCIe; ~18 H100-hours + ~1.5 A100-hours total, ~$63 ([spend](../results/spend.md)). |
 >
 > Kill criteria: none triggered. "Astra recipe, no search" reached 44.5 vs. Astra's 59.4 on dev, so the search
 > mattered, and the LP's claim rests on matching that with 8× fewer weights and one solve.

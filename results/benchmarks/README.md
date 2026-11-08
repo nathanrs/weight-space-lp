@@ -76,3 +76,16 @@ at ~60% strict, within ~1 SE (≈2.1 pp) of each other. No sign the edits damage
 
 Flat: the blind edit's gap to Astra's direction (and its higher cut rate) is not a push-strength problem; it comes
 from the direction u itself (cos ≈ 0.6 to Astra's).
+
+## Steering-vector baseline (E4; unedited model + constant vector at L15/L19 MLP output; A100)
+
+Vector = an edit's mean residual write on fit tokens, `mean_t(v·h_t)·u` (`steer/*.npz`, from `scripts/e3_overlap.py`).
+
+| Steering | Dev GSM8K | Dev MATH | Dev pooled | Dev cut % | MATH-500 ×1 (cut %) |
+|---|---|---|---|---|---|
+| 0.5 × shift_k8 | 65.6 | 37.5 | 51.6 | 42 | |
+| **1 × shift_k8** | 65.6 | 50.0 | **57.8** | 23 | **50.8** (37.6) |
+| 2 × shift_k8 | 31.2 | 31.2 | 31.2 | 10 | |
+| 1 × astra_p50c | 70.3 | 43.8 | 57.0 | 34 | |
+
+MATH-500 paired on seed 0: steering − Astra = +0.8 (SE 2.0); steering − shift_k8 = −2.4 (SE 1.9); vs. base +43.8 (2.3).

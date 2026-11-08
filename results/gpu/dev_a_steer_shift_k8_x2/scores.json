@@ -1,0 +1,39 @@
+{
+ "_protocol": {
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "ckpt": "ckpts/base"
+ },
+ "gsm8k_train": {
+  "acc": 0.3125,
+  "cut_share": 0.046875,
+  "mean_tokens": 6964.890625,
+  "n_problems": 64,
+  "samples": 1,
+  "ok": 20,
+  "total": 64,
+  "cut": 3,
+  "tokens_sum": 445753,
+  "no_answer_finished": 4,
+  "s": 147
+ },
+ "math_train": {
+  "acc": 0.3125,
+  "cut_share": 0.15625,
+  "mean_tokens": 13663.5625,
+  "n_problems": 64,
+  "samples": 1,
+  "ok": 20,
+  "total": 64,
+  "cut": 10,
+  "tokens_sum": 874468,
+  "no_answer_finished": 8,
+  "s": 224
+ }
+}
