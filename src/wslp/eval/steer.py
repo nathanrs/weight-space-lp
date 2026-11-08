@@ -17,7 +17,7 @@ def register():
     from vllm.model_executor.models import qwen3_5
 
     scale = float(os.environ.get("WSLP_STEER_SCALE", "1"))
-    vecs = {int(k): torch.tensor(v * scale, dtype=torch.float32) for k, v in np.load(path).items()}
+    vecs = {int(k): (v * scale).astype(np.float32) for k, v in np.load(path).items()}
     cls = qwen3_5.Qwen3_5DecoderLayer
     if getattr(cls, "_wslp_steer", False):
         return
@@ -27,14 +27,16 @@ def register():
         init(self, *a, **kw)
         self.wslp_steer = self.layer_idx in vecs
         if self.wslp_steer:
-            self.register_buffer("wslp_vec", vecs[self.layer_idx].clone(), persistent=False)
+            p = next(self.parameters())  # build on the layer's own device/dtype: no host copies under CUDA graphs
+            self.register_buffer("wslp_vec", torch.tensor(vecs[self.layer_idx], device=p.device, dtype=p.dtype),
+                                 persistent=False)
             print(f"[wslp-steer] layer {self.layer_idx}: |vec| = {float(self.wslp_vec.norm()):.3f} (scale {scale})",
                   flush=True)
 
     def forward(self, *a, **kw):
         hidden_states, residual = fwd(self, *a, **kw)
         if self.wslp_steer:
-            hidden_states = hidden_states + self.wslp_vec.to(hidden_states.device, hidden_states.dtype)
+            hidden_states = hidden_states + self.wslp_vec
         return hidden_states, residual
 
     cls.__init__, cls.forward, cls._wslp_steer = __init__, forward, True
