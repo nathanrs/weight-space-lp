@@ -1,0 +1,118 @@
+{
+ "15": {
+  "astra_p50c": {
+   "n_neurons": 64,
+   "overlap_astra64": 64,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.358,
+   "push_P": -0.445,
+   "push_R_during": -0.961,
+   "push_cv": 1.11
+  },
+  "shift_k8": {
+   "n_neurons": 8,
+   "overlap_astra64": 3,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.893,
+   "push_P": -0.871,
+   "push_R_during": -0.972,
+   "push_cv": 0.17
+  },
+  "shift_k32": {
+   "n_neurons": 32,
+   "overlap_astra64": 5,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.538,
+   "push_P": -0.852,
+   "push_R_during": -0.993,
+   "push_cv": 0.176
+  },
+  "sel_k64": {
+   "n_neurons": 64,
+   "overlap_astra64": 8,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.269,
+   "push_P": -0.212,
+   "push_R_during": -0.795,
+   "push_cv": 1.191
+  },
+  "realshift_k8": {
+   "n_neurons": 8,
+   "overlap_astra64": 6,
+   "cos_u_astra": 0.616,
+   "active_share_median": 0.685,
+   "push_P": -0.679,
+   "push_R_during": -0.775,
+   "push_cv": 0.208
+  },
+  "realshift_k64": {
+   "n_neurons": 63,
+   "overlap_astra64": 11,
+   "cos_u_astra": 0.616,
+   "active_share_median": 0.509,
+   "push_P": -0.688,
+   "push_R_during": -0.795,
+   "push_cv": 0.189
+  },
+  "_overlap_shift_k8_realshift_k8": 2,
+  "_active_share_all_neurons_median": 0.157
+ },
+ "19": {
+  "astra_p50c": {
+   "n_neurons": 64,
+   "overlap_astra64": 64,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.349,
+   "push_P": -0.509,
+   "push_R_during": -1.271,
+   "push_cv": 1.375
+  },
+  "shift_k8": {
+   "n_neurons": 8,
+   "overlap_astra64": 1,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.272,
+   "push_P": -0.611,
+   "push_R_during": -0.911,
+   "push_cv": 0.807
+  },
+  "shift_k32": {
+   "n_neurons": 32,
+   "overlap_astra64": 1,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.218,
+   "push_P": -0.665,
+   "push_R_during": -1.063,
+   "push_cv": 0.667
+  },
+  "sel_k64": {
+   "n_neurons": 64,
+   "overlap_astra64": 2,
+   "cos_u_astra": 1.0,
+   "active_share_median": 0.207,
+   "push_P": -0.266,
+   "push_R_during": -0.888,
+   "push_cv": 1.233
+  },
+  "realshift_k8": {
+   "n_neurons": 8,
+   "overlap_astra64": 1,
+   "cos_u_astra": 0.64,
+   "active_share_median": 0.946,
+   "push_P": -0.856,
+   "push_R_during": -0.876,
+   "push_cv": 0.117
+  },
+  "realshift_k64": {
+   "n_neurons": 64,
+   "overlap_astra64": 5,
+   "cos_u_astra": 0.64,
+   "active_share_median": 0.625,
+   "push_P": -0.844,
+   "push_R_during": -0.902,
+   "push_cv": 0.101
+  },
+  "_overlap_shift_k8_realshift_k8": 0,
+  "_active_share_all_neurons_median": 0.182
+ }
+}

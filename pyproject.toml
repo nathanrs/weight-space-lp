@@ -25,3 +25,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wslp"]
+
+[project.entry-points."vllm.general_plugins"]
+wslp_steer = "wslp.eval.steer:register"
