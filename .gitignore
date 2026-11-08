@@ -17,3 +17,5 @@ results/logs/
 # copied from MIT's Experiment 8 logs by scripts/fetch_exp8.sh
 data/practice/
 data/model_text/
+# eval-job resume markers (only meaningful on the cluster)
+results/gpu/**/.done
