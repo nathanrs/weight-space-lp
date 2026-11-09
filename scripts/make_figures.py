@@ -37,7 +37,7 @@ for label, (names, col, mk) in series.items():
     x = [weights(n) for n in names]
     y = [dev_acc(n) for n in names]
     ax.plot(x, y, marker=mk, color=col, label=label)
-for n, txt, col in [("astra_p50c", "Agent edit (50 rounds of search)", "k"), ("recipe_nosearch", "Agent's recipe, no search", "gray")]:
+for n, txt, col in [("astra_p50c", "Agent edit (50-pass search)", "k"), ("recipe_nosearch", "Agent's recipe, no search", "gray")]:
     ax.scatter([weights(n)], [dev_acc(n)], marker="*", s=180, color=col, zorder=5, label=txt)
 ax.axhline(dev_acc("base"), color="gray", ls=":", lw=1)
 ax.text(1.2e4, dev_acc("base") + 1, "base model", color="gray", fontsize=8)
@@ -81,7 +81,7 @@ for j, (b, pat) in enumerate(BENCH.items()):
 ax.set_xticks(range(len(BENCH)), list(BENCH))
 ax.set_ylabel("accuracy, %")
 ax.set_ylim(0, 85)
-ax.set_title("Accuracy: base model vs. the agent's 50-round edit vs. one LP solve")
+ax.set_title("Accuracy: base model vs. the agent's edit vs. one LP solve")
 ax.legend(fontsize=8, loc="upper right", ncol=2)
 fig.tight_layout()
 fig.savefig(OUT / "benchmarks.png", dpi=160)

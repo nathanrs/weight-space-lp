@@ -3,9 +3,11 @@
 ## Background
 
 In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/) (Takehi et al., MIT CSAIL;
-[logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)), an LLM agent (OpenAI's "Astra") spent 50
-rounds, about 20 hours, hand-editing Qwen3.5-0.8B's weights to stop it from looping while it thinks. Its final edit
-took MATH-500 from 7.9% to 48.1% in the authors' logs. That edit turns out to be **rank-1**: it pushes the hidden
+[logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)), an LLM agent (OpenAI's "Astra") hand-edited
+Qwen3.5-0.8B's weights to stop it from looping while it thinks. It could inspect the weights freely but had a budget
+of 50 forward passes, each a batched run of the model (about 64 sequences on average) on practice problems or texts of
+its choosing, with no gradients. The run took 158 turns and about 16 hours of wall-clock time (20.3 hours in the
+logs, including a 4.7-hour outage). Its final edit took MATH-500 from 7.9% to 48.1% in the authors' logs. That edit turns out to be **rank-1**: it pushes the hidden
 state along a single direction. Once you know that direction, choosing *which neurons and how much* is a linear
 program. This project tests whether one LP solve can stand in for the agent's search.
 
@@ -109,6 +111,9 @@ presence penalty 1.5, up to 32,768 new tokens (a generation that hits the limit 
 because it is stuck in a loop); the last `\boxed{}` answer is graded with math-verify. IFEval uses
 lm-eval's port of the official checkers, scored on the text after the last `</think>` (empty if the generation was
 truncated while thinking). Differences are paired per problem against the agent edit.
+
+Weight counts are weights whose stored bf16 value actually changed. The post's 131,072 for the agent edit counts every
+weight in its 128 edited columns; 884 of them round back to their original value, so we count 130,188.
 
 ## Caveats
 

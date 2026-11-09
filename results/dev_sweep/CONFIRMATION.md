@@ -9,7 +9,7 @@ measured-direction edit, is in [benchmarks](../benchmarks/README.md).
 | Edit | Changed weights | GSM8K | MATH | Pooled | Gain vs base (SE) | Rescues / losses | Truncated % | Mean tokens |
 |---|---|---|---|---|---|---|---|---|
 | Base model | 0 | 15.6 | 8.6 | 12.1 | — | — | 89.1 | 29,717 |
-| Agent edit (50 rounds of search) | 130,188 | 64.5 | 42.2 | 53.3 | +41.2 (2.2) | 215 / 4 | 21.3 | 17,004 |
+| Agent edit (50-pass search) | 130,188 | 64.5 | 42.2 | 53.3 | +41.2 (2.2) | 215 / 4 | 21.3 | 17,004 |
 | **LP, agent's direction** (8 neurons/layer) | **16,291** | **66.4** | **46.9** | **56.6** | **+44.5 (2.3)** | 231 / 3 | 21.7 | 15,195 |
 
 Head-to-head, paired, n = 512: **LP edit − agent edit = +3.3 points (SE 1.9)**; 54 problems only the LP edit solves,

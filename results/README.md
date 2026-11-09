@@ -5,7 +5,7 @@ Tables use readable names; file and folder names use short IDs:
 | ID | Meaning |
 |---|---|
 | `base` | Base model |
-| `astra_p50c` | Agent edit (the agent's run `p50c`, after 50 rounds) |
+| `astra_p50c` | Agent edit (the agent's run `p50c`, with 50 forward passes) |
 | `shift_k<N>` / `sel_k<N>` | LP with the agent's direction, broad (ε = 1.0) / selective (ε = 0.25), N neurons per layer |
 | `lp_shift` / `lp_sel` | Same, with no neuron limit |
 | `real…` | Same LPs with the measured direction; `_d2` / `_d8` = push 2× / 8× the loop excess (default 4×) |

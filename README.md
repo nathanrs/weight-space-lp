@@ -1,8 +1,8 @@
 # weight-space-lp
 
 Qwen3.5-0.8B often gets stuck repeating itself while it thinks. In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/)
-(Takehi et al., MIT CSAIL), an LLM agent fixed this by hand-editing the model's weights over 50 rounds of trial and
-error ([logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)). This repo computes an equivalent edit with a
+(Takehi et al., MIT CSAIL), an LLM agent fixed this by hand-editing the model's weights, testing its ideas with a
+budget of 50 batched runs of the model ([logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)). This repo computes an equivalent edit with a
 single linear-program solve: about a minute on a laptop, changing 8× fewer weights.
 
 The full write-up (method, findings, steering baseline, caveats) is in [docs/WRITEUP.md](docs/WRITEUP.md).
