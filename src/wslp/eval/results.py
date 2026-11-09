@@ -39,14 +39,14 @@ def totals(runs, sets=None) -> dict:
     return {"samples": n, "cut_share": cut / n, "mean_tokens": tok / n}
 
 
-FIXED = {"base": "Base model", "astra_p50c": "Agent edit", "recipe_nosearch": "Agent's recipe on the measured direction, no search",
+FIXED = {"base": "Base model", "astra_p50c": "Agent edit", "recipe_nosearch": "Agent's recipe on the heuristic direction, no search",
          "random_ctrl": "Random direction (control)"}
-HEADLINE = {"shift_k8": "LP, agent's direction", "realshift_k8": "LP, measured direction"}
+HEADLINE = {"shift_k8": "LP, agent's direction", "realshift_k8": "LP, heuristic direction"}
 
 
 def label(edit: str, short=True) -> str:
     """Readable name for an edit id (file names keep the ids). Ids: [real](shift|sel)_k<N> or lp_(shift|sel):
-    real = direction measured from the model's own loops (else the agent's), shift = broad push (loose bound on
+    real = heuristic direction from the model's own loops (else the agent's), shift = broad push (loose bound on
     productive tokens), sel = selective (tight bound), k = neurons per layer."""
     if edit in FIXED:
         return FIXED[edit]
@@ -59,7 +59,7 @@ def label(edit: str, short=True) -> str:
     real = edit.startswith("real")
     rest = edit.removeprefix("real").removeprefix("lp_")
     kind, _, k = rest.partition("_k")
-    kind, _, push = kind.partition("_d")  # _d<m>: measured direction pushed m× the loop excess (default 4×)
-    return (f"LP, {"measured" if real else "agent's"} direction, "
+    kind, _, push = kind.partition("_d")  # _d<m>: heuristic direction pushed m× the loop excess (default 4×)
+    return (f"LP, {"heuristic" if real else "agent's"} direction, "
             f"{'broad' if kind == 'shift' else 'selective'}, {k + ' neurons/layer' if k else 'no neuron limit'}"
             + (f", {push}× push" if push else ""))

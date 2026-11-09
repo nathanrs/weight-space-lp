@@ -30,14 +30,14 @@ fig, ax = plt.subplots(figsize=(7, 4.2))
 series = {
     "LP, agent's direction, broad": (["shift_k8", "shift_k32", "shift_k128", "lp_shift"], "C0", "o"),
     "LP, agent's direction, selective": (["sel_k64", "sel_k512", "lp_sel"], "C1", "s"),
-    "LP, measured direction, broad": (["realshift_k8", "realshift_k64"], "C2", "o"),
-    "LP, measured direction, selective": (["realsel_k64", "realsel_k512"], "C3", "s"),
+    "LP, heuristic direction, broad": (["realshift_k8", "realshift_k64"], "C2", "o"),
+    "LP, heuristic direction, selective": (["realsel_k64", "realsel_k512"], "C3", "s"),
 }
 for label, (names, col, mk) in series.items():
     x = [weights(n) for n in names]
     y = [dev_acc(n) for n in names]
     ax.plot(x, y, marker=mk, color=col, label=label)
-for n, txt, col in [("astra_p50c", "Agent edit (50-pass search)", "k"), ("recipe_nosearch", "Agent's recipe on measured direction, no search", "gray")]:
+for n, txt, col in [("astra_p50c", "Agent edit (50-pass search)", "k"), ("recipe_nosearch", "Agent's recipe on heuristic direction, no search", "gray")]:
     ax.scatter([weights(n)], [dev_acc(n)], marker="*", s=180, color=col, zorder=5, label=txt)
 ax.axhline(dev_acc("base"), color="gray", ls=":", lw=1)
 ax.text(1.2e4, dev_acc("base") + 1, "base model", color="gray", fontsize=8)
@@ -62,7 +62,7 @@ BENCH = {
 MATH = {"base": ["e0_base_math500"], "astra_p50c": ["e0_astra_math500", "math500s1_astra_p50c"],
         "shift_k8": ["e0_shift_k8_math500", "math500s1_shift_k8"], "realshift_k8": ["math500_realshift_k8"]}
 MODELS = [("base", "Base model", "lightgray"), ("astra_p50c", "Agent edit (130k weights changed)", "k"),
-          ("shift_k8", "LP, agent's direction (16k)", "C0"), ("realshift_k8", "LP, measured direction (16k)", "C2")]
+          ("shift_k8", "LP, agent's direction (16k)", "C0"), ("realshift_k8", "LP, heuristic direction (16k)", "C2")]
 fig, ax = plt.subplots(figsize=(8, 4.2))
 w = 0.2
 for j, (b, pat) in enumerate(BENCH.items()):

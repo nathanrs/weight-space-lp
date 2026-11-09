@@ -2,7 +2,7 @@
 
 The LP edit (agent's direction, broad, 8 neurons/layer; `shift_k8`) was picked from about 14 candidates on the dev
 set. These problems were never used to fit or pick anything. The fuller confirmation, with more samples and the
-measured-direction edit, is in [benchmarks](../benchmarks/README.md).
+heuristic-direction edit, is in [benchmarks](../benchmarks/README.md).
 
 ## Fresh practice (256 GSM8K-train + 256 MATH-train, 1 sample), compared to the base model
 

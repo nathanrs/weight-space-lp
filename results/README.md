@@ -8,12 +8,12 @@ Tables use readable names; file and folder names use short IDs:
 | `astra_p50c` | Agent edit (the agent's run `p50c`, with 50 forward passes) |
 | `shift_k<N>` / `sel_k<N>` | LP with the agent's direction, broad (ε = 1.0) / selective (ε = 0.25), N neurons per layer |
 | `lp_shift` / `lp_sel` | Same, with no neuron limit |
-| `real…` | Same LPs with the measured direction; `_d2` / `_d8` = push 2× / 8× the loop excess (default 4×) |
-| `recipe_nosearch`, `random_ctrl` | Agent's recipe (column scoring, 6× rule) applied once to the measured direction, no search; random direction (control) |
+| `real…` | Same LPs with the heuristic direction (from automatically detected loops); `_d2` / `_d8` = push 2× / 8× the loop excess (default 4×) |
+| `recipe_nosearch`, `random_ctrl` | Agent's recipe (column scoring, 6× rule) applied once to the heuristic direction, no search; random direction (control) |
 | `steer_<edit>_x<s>` | Unedited model plus s × that edit's average push as a constant vector |
 | `dev_a`, `final_practice` | Dev set (128 problems), fresh practice (512 problems) |
 
-The headline edits are `shift_k8` ("LP, agent's direction") and `realshift_k8` ("LP, measured direction").
+The headline edits are `shift_k8` ("LP, agent's direction") and `realshift_k8` ("LP, heuristic direction").
 
 | Folder | What | Key file |
 |---|---|---|

@@ -42,5 +42,5 @@ How well each signal separates looping from productive tokens (held-out AUC):
 | At loop start | 0.727 | 0.620 | 0.622 | 0.698 | 0.608 |
 
 The agent edit pushes on every token, not just loops: its average push along `u` is −0.42 on productive tokens
-(layer 15) vs. −0.94 on looping tokens. Cosine(agent's direction, measured direction) ≈ 0.60 (layer 15), 0.62
+(layer 15) vs. −0.94 on looping tokens. Cosine(agent's direction, heuristic direction) ≈ 0.60 (layer 15), 0.62
 (layer 19).

@@ -11,16 +11,16 @@ Truncated % = generations that hit the 32,768-token limit. Paired differences ar
 | Base model | 1 | 12.1 | 89.1 | 29,717 |
 | Agent edit | 1 | 53.3 | 21.3 | 17,004 |
 | LP, agent's direction | 1 | 56.6 | 21.7 | 15,196 |
-| LP, measured direction | 1 | 54.9 | 38.1 | 18,268 |
+| LP, heuristic direction | 1 | 54.9 | 38.1 | 18,268 |
 
 | Paired difference | Δ pp (SE) | n |
 |---|---|---|
 | Agent edit − Base model | +41.2 (2.2) | 512 |
 | LP, agent's direction − Base model | +44.5 (2.3) | 512 |
-| LP, measured direction − Base model | +42.8 (2.3) | 512 |
+| LP, heuristic direction − Base model | +42.8 (2.3) | 512 |
 | LP, agent's direction − Agent edit | +3.3 (1.9) | 512 |
-| LP, measured direction − Agent edit | +1.6 (1.9) | 512 |
-| LP, measured direction − LP, agent's direction | -1.8 (2.0) | 512 |
+| LP, heuristic direction − Agent edit | +1.6 (1.9) | 512 |
+| LP, heuristic direction − LP, agent's direction | -1.8 (2.0) | 512 |
 
 ## GSM8K test (1,319 problems)
 
@@ -29,16 +29,16 @@ Truncated % = generations that hit the 32,768-token limit. Paired differences ar
 | Base model | 1 | 14.1 | 87.7 | 29,352 |
 | Agent edit | 2 | 68.2 | 6.6 | 11,708 |
 | LP, agent's direction | 2 | 69.6 | 4.6 | 9,658 |
-| LP, measured direction | 2 | 65.4 | 23.2 | 13,505 |
+| LP, heuristic direction | 2 | 65.4 | 23.2 | 13,505 |
 
 | Paired difference | Δ pp (SE) | n |
 |---|---|---|
 | Agent edit − Base model | +54.1 (1.3) | 1319 |
 | LP, agent's direction − Base model | +55.5 (1.3) | 1319 |
-| LP, measured direction − Base model | +51.3 (1.3) | 1319 |
+| LP, heuristic direction − Base model | +51.3 (1.3) | 1319 |
 | LP, agent's direction − Agent edit | +1.4 (0.9) | 1319 |
-| LP, measured direction − Agent edit | -2.8 (0.9) | 1319 |
-| LP, measured direction − LP, agent's direction | -4.2 (0.9) | 1319 |
+| LP, heuristic direction − Agent edit | -2.8 (0.9) | 1319 |
+| LP, heuristic direction − LP, agent's direction | -4.2 (0.9) | 1319 |
 
 ## MATH-500
 
@@ -47,16 +47,16 @@ Truncated % = generations that hit the 32,768-token limit. Paired differences ar
 | Base model | 1 | 7.0 | 93.2 | 30,978 |
 | Agent edit | 4 | 50.9 | 31.1 | 21,762 |
 | LP, agent's direction | 4 | 51.7 | 39.2 | 20,641 |
-| LP, measured direction | 4 | 47.8 | 48.5 | 22,301 |
+| LP, heuristic direction | 4 | 47.8 | 48.5 | 22,301 |
 
 | Paired difference | Δ pp (SE) | n |
 |---|---|---|
 | Agent edit − Base model | +44.0 (1.9) | 500 |
 | LP, agent's direction − Base model | +44.7 (2.0) | 500 |
-| LP, measured direction − Base model | +40.8 (1.9) | 500 |
+| LP, heuristic direction − Base model | +40.8 (1.9) | 500 |
 | LP, agent's direction − Agent edit | +0.8 (1.1) | 500 |
-| LP, measured direction − Agent edit | -3.1 (1.1) | 500 |
-| LP, measured direction − LP, agent's direction | -3.9 (1.1) | 500 |
+| LP, heuristic direction − Agent edit | -3.1 (1.1) | 500 |
+| LP, heuristic direction − LP, agent's direction | -3.9 (1.1) | 500 |
 
 <!-- end generated -->
 
@@ -67,13 +67,13 @@ Truncated % = generations that hit the 32,768-token limit. Paired differences ar
 | Base model | 22.9 | 23.1 | 21.0 | 21.1 | 73.4 | 24,940 |
 | Agent edit | 61.9 | 64.5 | 71.5 | 73.9 | 1.7 | 4,052 |
 | LP, agent's direction | 59.7 | 63.6 | 67.0 | 70.3 | 5.7 | 4,349 |
-| LP, measured direction | 60.4 | 63.6 | 65.3 | 67.6 | 11.8 | 7,280 |
+| LP, heuristic direction | 60.4 | 63.6 | 65.3 | 67.6 | 11.8 | 7,280 |
 
 The base model fails IFEval mostly by looping inside its thinking (73% truncated, so the response is empty). Every
 edit fixes that and lands at about 60% strict, within about 1 SE (≈2.1 points) of each other. No sign that the edits
 damage instruction following.
 
-## Push strength of the measured direction (dev set, 8 neurons/layer)
+## Push strength of the heuristic direction (dev set, 8 neurons/layer)
 
 Looping tokens are pushed by a multiple of their measured excess along `u`.
 
@@ -83,7 +83,7 @@ Looping tokens are pushed by a multiple of their measured excess along `u`.
 | 4× (the headline edit) | 62.5 | 46.9 | 54.7 | 36.7 |
 | 8× (only ~25% of the target reachable with 8 neurons) | 64.1 | 46.9 | 55.5 | 37.5 |
 
-Flat: the measured-direction edit trails the agent's direction (and truncates more) because of the direction itself
+Flat: the heuristic-direction edit trails the agent's direction (and truncates more) because of the direction itself
 (cosine ≈ 0.6 with the agent's), not the push strength.
 
 ## Steering-vector baseline (unedited model plus a constant vector at the layer 15/19 MLP outputs; A100)

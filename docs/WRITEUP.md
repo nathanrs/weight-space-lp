@@ -66,11 +66,12 @@ minute.
 |---|---|---|---|---|
 | Agent edit | 4 hand-written text pairs | agent | fixed 6× rule on 64 columns | 50-pass search |
 | LP, agent's direction | agent's | agent's | LP | none |
-| LP, measured direction | difference of means on real loops | agent's | LP | none |
+| LP, heuristic direction | difference of means on real loops | agent's | LP | none |
 
-The measured direction uses the same difference-of-means recipe as the agent, but on real traces instead of matched
-pairs, so it also picks up whatever else differs between early and late reasoning (position, topic drift). Its
-cosine with the agent's direction is about 0.6.
+"Heuristic" refers to the labels, not the direction: looping and productive tokens are picked by an automatic
+repeat detector (step 2 below) instead of hand-written examples. The direction itself is the same difference-of-means
+recipe the agent used, but on real traces instead of matched pairs, so it also picks up whatever else differs between
+early and late reasoning (position, topic drift). Its cosine with the agent's direction is about 0.6.
 
 ## Where the agent's time went
 
@@ -123,18 +124,18 @@ and the neuron count once with a dev-set sweep.
    released base-model traces and from 512 of our own.
 3. **Swept 14 edits on a dev set** of 128 held-out practice problems
    ([results/dev_sweep](../results/dev_sweep/README.md)), varying three things:
-   - the direction: the **agent's**, or one **measured** from the model's own traces (mean activation on looping
+   - the direction: the **agent's**, or a **heuristic** one from the model's own traces (mean activation on looping
      tokens minus productive tokens), with no LLM involved (the layers, 15 and 19, are still the agent's choice);
    - the number of neurons per layer, from 8 to all 3,584;
    - **broad** (ε = 1.0: productive tokens may move, so the edit becomes a near-constant push) vs. **selective**
      (ε = 0.25: the edit tries to act only on loops).
 
    Controls: a random direction, and the agent's recipe (its column scoring and 6× rule) applied once to the
-   measured direction, without search. The pick was **broad, 8
-   neurons per layer**. "LP, agent's direction" and "LP, measured direction" below both mean that setting.
+   heuristic direction, without search. The pick was **broad, 8
+   neurons per layer**. "LP, agent's direction" and "LP, heuristic direction" below both mean that setting.
 4. **Confirmed on untouched data** ([results/benchmarks](../results/benchmarks/README.md)): 512 fresh practice
    problems never used to fit or pick anything, GSM8K test, MATH-500 (4 samples per problem) and IFEval.
-5. **Analysis and baselines**: neuron overlap, push strength of the measured direction, and a steering-vector
+5. **Analysis and baselines**: neuron overlap, push strength of the heuristic direction, and a steering-vector
    baseline.
 
 ![dev sweep](../results/figures/dev_sweep.png)
@@ -145,13 +146,13 @@ and the neuron count once with a dev-set sweep.
 
 - **Given the agent's direction, the LP matches the agent edit with 8× fewer weights.** It is within about a point of
   the agent edit on every benchmark, all within noise.
-- **On the same direction, the LP beats the agent's recipe.** The agent's recipe applied once to the measured
+- **On the same direction, the LP beats the agent's recipe.** The agent's recipe applied once to the heuristic
   direction, without search, scores 44.5 on the dev set; one LP solve on that direction scores 54.7 with 8 neurons
   per layer. On the agent's direction, one LP solve (62.5) does as well as the agent's searched edit (59.4).
-- **With the measured direction (no LLM, though still on the agent's layers 15 and 19), the LP gets about 93% of the
+- **With the heuristic direction (no LLM, though still on the agent's layers 15 and 19), the LP gets about 93% of the
   way.** It is about 3 points behind the agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes
   from the direction, not the push strength: pushing looping tokens 2×, 4× or 8× their measured excess along `u`
-  scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6 with the agent's.
+  scores 54.7, 54.7 and 55.5 on the dev set. The heuristic direction has cosine ≈ 0.6 with the agent's.
 - **The fix acts like a constant offset.** Fewer neurons did better (8 > 32 > 128), and selective edits did no better
   than broad ones. At layer 15 the LP's 8 neurons are active on 89% of tokens (a typical neuron: 16%), and their push
   barely varies from token to token (coefficient of variation 0.17; the agent edit's: 1.1). A linear probe can spot a

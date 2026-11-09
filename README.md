@@ -8,7 +8,7 @@ push the hidden state away from one "loop direction".
 
 Given that direction, this repo picks which neurons to change and by how much with a single linear-program solve
 (about a minute on a laptop). The result matches the agent's edit while changing 8× fewer weights. A second version
-also measures the direction from the model's own loops, with no LLM, and gets about 93% of the way.
+takes the direction from automatically detected loops in the model's own traces, with no LLM, and gets about 93% of the way.
 
 The full write-up (method, findings, steering baseline, caveats) is in [docs/WRITEUP.md](docs/WRITEUP.md).
 
@@ -18,7 +18,7 @@ The full write-up (method, findings, steering baseline, caveats) is in [docs/WRI
 
 Accuracy on held-out benchmarks (problems × samples each; the base model got 1 sample on MATH-500). Error bars are the
 paired SE of each edit's difference from the agent edit. The two LP edits differ only in where the loop direction
-comes from: the agent's, or measured from the model's own looping traces with no LLM involved (layers 15 and 19 are
+comes from: the agent's, or a heuristic one taken from the model's own looping traces with no LLM involved (layers 15 and 19 are
 still taken from the agent). Exact numbers and the eval protocol are in
 [results/benchmarks](results/benchmarks/README.md).
 
@@ -49,7 +49,7 @@ s.t.   v · h_t ≤ −δ     t ∈ R    (push looping tokens away from u)
 ```
 
 The L1 objective keeps `v` sparse, so the LP also picks the neurons: 8 per layer for the edit above. This replaces
-the agent's choice of columns and amounts, and its search. The measured version also replaces the text pairs: its `u`
+the agent's choice of columns and amounts, and its search. The heuristic version also replaces the text pairs: its `u`
 is the difference between the average hidden state on looping and productive tokens in real traces. The LP is solved
 with PDHG on MPS/CUDA ([`src/wslp/lp.py`](src/wslp/lp.py)).
 
@@ -65,7 +65,7 @@ python scripts/export_astra_edit.py      # edits/astra_p50c.safetensors
 python scripts/e1_collect_released.py
 python scripts/e1_collect_fitgen.py
 
-# LP sweep: eps (1.0 broad, 0.25 selective), neurons per layer, activations, direction (astra = agent's, real = measured), [push multiplier]
+# LP sweep: eps (1.0 broad, 0.25 selective), neurons per layer, activations, direction (astra = agent's, real = heuristic), [push multiplier]
 python scripts/e2_sparsity_sweep.py 1.0 8,32,128 acts_fitgen astra
 python scripts/e2_make_edits_sweep.py acts_fitgen_astra_eps1.0 8,32,128 shift    # -> edits/shift_k{8,32,128}
 
