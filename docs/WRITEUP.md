@@ -7,7 +7,7 @@ In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-
 Qwen3.5-0.8B's weights to stop it from looping while it thinks. It could inspect the weights freely but had a budget
 of 50 forward passes, each a batched run of the model (about 64 sequences on average) on practice problems or texts of
 its choosing, with no gradients. The run took 158 turns and about 16 hours of wall-clock time (20.3 hours in the logs,
-including a 4.7-hour outage). Its final edit took MATH-500 from 7.9% to 48.1% in the authors' logs.
+including a 4.7-hour outage; [breakdown below](#where-the-agents-time-went)). Its final edit took MATH-500 from 7.9% to 48.1% in the authors' logs.
 
 That edit turns out to be **rank-1**: it pushes the hidden state along a single direction. Once you know that
 direction, choosing *which neurons and how much* is a linear program. This project tests whether one LP solve can
@@ -71,6 +71,43 @@ minute.
 The measured direction uses the same difference-of-means recipe as the agent, but on real traces instead of matched
 pairs, so it also picks up whatever else differs between early and late reasoning (position, topic drift). Its
 cosine with the agent's direction is about 0.6.
+
+## Where the agent's time went
+
+Reconstructed from the run's logs ([`tool_calls.jsonl`, `driver.log` and
+`work_notes/experiment_history.md`](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math/runs/p50c)). Clock time is from the first turn.
+
+| Phase | Clock time | Counted passes | What happened |
+|---|---|---|---|
+| Find `u` | 0:00 → 0:15 | 3 (1–3) | One generation on 96 practice problems (85 hit the token limit), then the 8 hand-written texts; difference of means gives `u` |
+| Pick the layers | 0:15 → 2:20 | 2 (4–5) | Ablated one layer-19 neuron, then removed `u` from layer 19; chose layers 15 + 19 for the next test. About 1 hour of this was a harness stall |
+| Find `v` (columns and strength) | 2:20 → 10:00 | 28 (6–33) | The search below. Edit frozen at 10:02 |
+| Confirm the frozen edit | 10:00 → 20:17 | 17 (34–50) | No changes: the same edit re-tested on fresh batches (53–73% vs. 3–23% for the base model). Includes the 4.7-hour outage |
+
+Inside the `v` phase, practice accuracy with the base model at 8–11% on the same problems. Rows come from different
+batches unless marked, so compare across rows loosely:
+
+| Edit on layers 15 + 19 | Token limit | Accuracy |
+|---|---|---|
+| Remove `u` from every column, 1× (directional ablation) | 32k | 42/128 = 33% |
+| Every column, 2× ᵃ | 32k | 110/256 = 43% |
+| Every column, 3× ᵃ | 32k | 123/256 = 48% |
+| Norm-matched random direction (control) | 32k | 16/128 = 12.5% |
+| Every column, 4× ᵇ | 16k | 48/128 = 37.5% |
+| Top 64 columns, 4× ᵇ | 16k | 47/128 = 36.7% |
+| **Top 64 columns, 6× (final)** | 32k | 35/64 = 55%, then 40/64 = 62.5% on a fresh batch |
+
+ᵃ ᵇ Same batch. On another shared batch, 1× → 2× went from 59/256 = 23% to 92/256 = 36%.
+
+So strength mattered more than which columns: restricting the edit to 64 columns cost nothing at 4×. There was also a
+detour into scaling two attention heads (5:15–5:30). 19 requests failed and were not charged against the budget (16
+generation-worker crashes, 3 malformed requests), 15 of them in the `v` phase.
+
+Diagnosis was fast: `u` took 15 minutes and the layers about an hour of active time. The job the LP replaces, choosing
+which columns and how much, took about 7.7 hours and 28 counted passes, about half of the active run (4.8 hours
+excluding crashed requests). That phase, not the whole run, is the fair comparison for one LP solve. The solve itself
+takes about a minute, but it needs loop-labeled activations (one GPU generation run on 512 problems), and we chose ε
+and the neuron count once with a dev-set sweep.
 
 ## What we did
 
