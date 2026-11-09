@@ -1,7 +1,7 @@
 [project]
 name = "wslp"
 version = "0.1.0"
-description = "Spec-and-solve: LP-compiled weight edits vs. LLM weight-space programming"
+description = "Fixing reasoning loops in Qwen3.5-0.8B with a weight edit computed by one linear program"
 requires-python = ">=3.11,<3.13"
 dependencies = [
   "torch>=2.6",

@@ -4,7 +4,7 @@ import sys
 
 import numpy as np
 
-from wslp.eval.results import G, mean_acc, totals
+from wslp.eval.results import G, label, mean_acc, totals
 from wslp.paths import ROOT
 
 prefix = sys.argv[1] if len(sys.argv) > 1 else "dev_a"
@@ -16,9 +16,13 @@ def load(run):
 
 
 base = load(f"{prefix}_base")
-lines = ["| Edit | Changed weights | GSM8K acc | MATH acc | Pooled acc | Gain (SE) | Rescues / losses | Cut % | Mean tokens |",
-         "|---|---|---|---|---|---|---|---|---|"]
-for d in sorted(G.glob(f"{prefix}_*")):
+lines = ["| Edit | ID | Changed weights | GSM8K acc | MATH acc | Pooled acc | Gain vs base (SE) | Rescues / losses | Truncated % | Mean tokens |",
+         "|---|---|---|---|---|---|---|---|---|---|"]
+ORDER = ["base", "astra_p50c", "recipe_nosearch", "random_ctrl", "shift_k8", "shift_k32", "shift_k128", "lp_shift",
+         "sel_k64", "sel_k512", "lp_sel", "realshift_k8", "realshift_d2_k8", "realshift_d8_k8", "realshift_k64",
+         "realsel_k64", "realsel_k512"]
+rank = lambda d: (ORDER.index(d.name[len(prefix) + 1:]) if d.name[len(prefix) + 1:] in ORDER else len(ORDER), d.name)
+for d in sorted(G.glob(f"{prefix}_*"), key=rank):
     run = d.name[len(prefix) + 1:]
     r = load(d.name)
     if not r:
@@ -32,7 +36,7 @@ for d in sorted(G.glob(f"{prefix}_*")):
     info = ROOT / "edits" / f"{run}.json"
     w = sum(v["changed_weights_bf16"] for v in json.load(open(info))["layers"].values()) if info.exists() else (130188 if run == "astra_p50c" else 0)
     t = totals(d.name, SETS)
-    lines.append(f"| {run} | {w:,} | {100*np.mean([r[i] for i in g]):.1f} | {100*np.mean([r[i] for i in m]):.1f} | "
+    lines.append(f"| {label(run, short=False)} | `{run}` | {w:,} | {100*np.mean([r[i] for i in g]):.1f} | {100*np.mean([r[i] for i in m]):.1f} | "
                  f"{100*b.mean():.1f} | {100*diff.mean():+.1f} ({100*diff.std(ddof=1)/np.sqrt(len(diff)):.1f}) | "
                  f"{int((diff>0).sum())} / {int((diff<0).sum())} | {100*t['cut_share']:.1f} | {int(t['mean_tokens']):,} |")
 print("\n".join(lines))

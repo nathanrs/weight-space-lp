@@ -28,24 +28,24 @@ def dev_acc(name):
 # ---- figure 1: dev_a accuracy vs changed weights
 fig, ax = plt.subplots(figsize=(7, 4.2))
 series = {
-    "LP, Astra's u, loose (shift)": (["shift_k8", "shift_k32", "shift_k128", "lp_shift"], "C0", "o"),
-    "LP, Astra's u, tight (sel)": (["sel_k64", "sel_k512", "lp_sel"], "C1", "s"),
-    "Blind LP, loose (realshift)": (["realshift_k8", "realshift_k64"], "C2", "o"),
-    "Blind LP, tight (realsel)": (["realsel_k64", "realsel_k512"], "C3", "s"),
+    "LP, agent's direction, broad": (["shift_k8", "shift_k32", "shift_k128", "lp_shift"], "C0", "o"),
+    "LP, agent's direction, selective": (["sel_k64", "sel_k512", "lp_sel"], "C1", "s"),
+    "LP, measured direction, broad": (["realshift_k8", "realshift_k64"], "C2", "o"),
+    "LP, measured direction, selective": (["realsel_k64", "realsel_k512"], "C3", "s"),
 }
 for label, (names, col, mk) in series.items():
     x = [weights(n) for n in names]
     y = [dev_acc(n) for n in names]
     ax.plot(x, y, marker=mk, color=col, label=label)
-for n, txt, col in [("astra_p50c", "Astra (50-pass search)", "k"), ("recipe_nosearch", "Astra's recipe, no search", "gray")]:
+for n, txt, col in [("astra_p50c", "Agent edit (50 rounds of search)", "k"), ("recipe_nosearch", "Agent's recipe, no search", "gray")]:
     ax.scatter([weights(n)], [dev_acc(n)], marker="*", s=180, color=col, zorder=5, label=txt)
 ax.axhline(dev_acc("base"), color="gray", ls=":", lw=1)
 ax.text(1.2e4, dev_acc("base") + 1, "base model", color="gray", fontsize=8)
 ax.axhline(dev_acc("random_ctrl"), color="red", ls=":", lw=1)
-ax.text(1.2e4, dev_acc("random_ctrl") - 3.5, "random-direction control", color="red", fontsize=8)
+ax.text(1.2e4, dev_acc("random_ctrl") - 3.5, "random direction (control)", color="red", fontsize=8)
 ax.set_xscale("log")
 ax.set_xlabel("changed weights (layers 15 + 19, bf16)")
-ax.set_ylabel("dev accuracy, % (128 problems; SE ≈ 4.5)")
+ax.set_ylabel("dev-set accuracy, % (128 problems; SE ≈ 4.5)")
 ax.set_title("Fewer neurons is as good or better")
 ax.set_ylim(0, 70)
 ax.legend(fontsize=7.5, loc="lower right")
@@ -61,8 +61,8 @@ BENCH = {
 }
 MATH = {"base": ["e0_base_math500"], "astra_p50c": ["e0_astra_math500", "math500s1_astra_p50c"],
         "shift_k8": ["e0_shift_k8_math500", "math500s1_shift_k8"], "realshift_k8": ["math500_realshift_k8"]}
-MODELS = [("base", "base model", "lightgray"), ("astra_p50c", "agent's edit (130k weights changed)", "k"),
-          ("shift_k8", "LP, agent's direction (16k)", "C0"), ("realshift_k8", "LP, direction from real loops (16k)", "C2")]
+MODELS = [("base", "Base model", "lightgray"), ("astra_p50c", "Agent edit (130k weights changed)", "k"),
+          ("shift_k8", "LP, agent's direction (16k)", "C0"), ("realshift_k8", "LP, measured direction (16k)", "C2")]
 fig, ax = plt.subplots(figsize=(8, 4.2))
 w = 0.2
 for j, (b, pat) in enumerate(BENCH.items()):

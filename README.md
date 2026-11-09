@@ -1,4 +1,4 @@
-# weight-space-lp
+# Fixing reasoning loops with one linear program
 
 Qwen3.5-0.8B often gets stuck repeating itself while it thinks. In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/)
 (Takehi et al., MIT CSAIL), an LLM agent fixed this by hand-editing the model's weights over 50 rounds of trial and
@@ -12,7 +12,10 @@ The full write-up (method, findings, steering baseline, caveats) is in [docs/WRI
 ![benchmarks](results/figures/benchmarks.png)
 
 Accuracy on held-out benchmarks (problems × samples each; the base model got 1 sample on MATH-500). Error bars are the paired SE of each edit's difference
-from the agent's edit. Exact numbers and the eval protocol are in [results/benchmarks](results/benchmarks/README.md).
+from the agent edit. The two LP edits differ only in where the loop direction comes from: the agent's, or measured
+from the model's own looping traces with no LLM involved. Exact numbers and the eval protocol are in
+[results/benchmarks](results/benchmarks/README.md); the write-up has a [terms table](docs/WRITEUP.md#terms) mapping
+these names to the file names.
 
 A constant steering vector of the same size along the same direction works about as well (50.8 on MATH-500). So the
 fix is "push away from one direction by the right amount", and the LP's contribution is finding that amount in one
@@ -21,13 +24,13 @@ solve and baking it into ordinary weights.
 ## How it works
 
 The agent's edit to `mlp.down_proj` in layers 15 and 19 is rank-1: `ΔW = u vᵀ`, where `u` is a direction in the
-hidden state. At token `t` it adds `(v · h_t) · u` to the residual stream, which is linear in `v`. Given activations
-`h_t` from the model's own traces, labeled as looping (`R`) or productive (`P`), choosing `v` is an LP:
+hidden state (the loop direction). At token `t` it adds `(v · h_t) · u` to the residual stream, which is linear in `v`. Given activations
+`h_t` from the model's own traces, split into looping tokens `R` and productive tokens `P`, choosing `v` is an LP:
 
 ```
 min_v  Σ_j |v_j|  +  C · Σ slack
-s.t.   v · h_t ≤ −δ     t ∈ R    (push loop tokens away from u)
-       |v · h_t| ≤ ε    t ∈ P    (leave productive tokens alone)
+s.t.   v · h_t ≤ −δ     t ∈ R    (push looping tokens away from u)
+       |v · h_t| ≤ ε    t ∈ P    (barely move productive tokens)
 ```
 
 The L1 objective keeps `v` sparse, so the LP also picks the neurons (8 per layer for the edit above). It is solved
@@ -45,7 +48,7 @@ python scripts/export_astra_edit.py      # edits/astra_p50c.safetensors
 python scripts/e1_collect_released.py
 python scripts/e1_collect_fitgen.py
 
-# LP sweep: eps, k list, activations, u source (astra|real), [blind push multiplier]
+# LP sweep: eps (1.0 broad, 0.25 selective), neurons per layer, activations, direction (astra = agent's, real = measured), [push multiplier]
 python scripts/e2_sparsity_sweep.py 1.0 8,32,128 acts_fitgen astra
 python scripts/e2_make_edits_sweep.py acts_fitgen_astra_eps1.0 8,32,128 shift    # -> edits/shift_k{8,32,128}
 

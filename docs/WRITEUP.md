@@ -1,30 +1,50 @@
-# Write-up
+# Fixing reasoning loops with one linear program: write-up
 
 ## Background
 
 In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/) (Takehi et al., MIT CSAIL;
-[logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)), an LLM agent ("Astra") spent 50 passes (about 20 hours) hand-editing Qwen3.5-0.8B's weights to stop its thinking
-loops. Its final edit (`p50c`) took MATH-500 from 7.9% to 48.1% in the authors' logs. That edit turns out to be
-**rank-1**, so once you know the direction it acts along, choosing *which neurons and how much* is a linear program.
-This project tests whether one LP solve can stand in for the search.
+[logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)), an LLM agent (OpenAI's "Astra") spent 50
+rounds, about 20 hours, hand-editing Qwen3.5-0.8B's weights to stop it from looping while it thinks. Its final edit
+took MATH-500 from 7.9% to 48.1% in the authors' logs. That edit turns out to be **rank-1**: it pushes the hidden
+state along a single direction. Once you know that direction, choosing *which neurons and how much* is a linear
+program. This project tests whether one LP solve can stand in for the agent's search.
+
+## Terms
+
+| Term | Meaning | Name in files |
+|---|---|---|
+| Agent edit | The agent's final edit after 50 rounds (its run `p50c`) | `astra_p50c` |
+| Loop direction `u` | The hidden-state direction the edit pushes against | |
+| Agent's direction | `u` as the agent built it: the mean difference between 4 hand-written repetitive and productive texts | `shift_*`, `sel_*`, `lp_*` |
+| Measured direction | `u` measured from the model's own traces: mean activation on looping tokens minus productive tokens. No LLM involved | `real*` |
+| Looping / productive tokens | Tokens inside a detected loop vs. tokens of normal reasoning | `R` / `P` |
+| Broad | The LP may move productive tokens by up to ε = 1.0, so the edit becomes a near-constant push | `shift` |
+| Selective | Tight bound ε = 0.25, so the edit tries to act only on looping tokens | `sel` |
+| Neurons per layer | How many `down_proj` input neurons the edit may touch in each of layers 15 and 19 | `_k8` = 8 |
+| Push strength | For the measured direction: how far looping tokens are pushed, as a multiple of their measured excess along `u` (default 4×) | `_d2`, `_d8` |
+| Dev set | 128 held-out practice problems (64 GSM8K-train, 64 MATH-train) used to pick an edit | `dev_a` |
+| Fresh practice | 512 more practice problems never used to fit or pick anything | `final_practice` |
+| Truncated | The generation hit the 32,768-token limit, almost always because it was stuck in a loop | "cut" |
+
+The two headline edits are **LP, agent's direction** (`shift_k8`: broad, 8 neurons/layer) and **LP, measured
+direction** (`realshift_k8`: the same LP with the measured direction).
 
 ## Why it is a linear program
 
-Astra's edit to `mlp.down_proj` in layers 15 and 19 is
+The agent's edit to `mlp.down_proj` in layers 15 and 19 is
 
 ```
 W = W0 − 6 · u (mask64 ⊙ uᵀW0)      i.e.  ΔW = u vᵀ,  v_j = −6·uᵀw_j on 64 chosen neurons, 0 elsewhere
 ```
 
-`u` is a unit direction in the 1024-d hidden state: the mean difference between 4 hand-written repetitive and
-productive texts. At token `t` the edit adds `(v · h_t) · u` to the residual stream, where `h_t` is the 3,584-d
-`down_proj` input, and nothing else changes. That is **linear in `v`**. With activations recorded from the model's
-own traces, labeled as looping tokens `R` and productive tokens `P`:
+`u` is a unit vector in the 1024-d hidden state. At token `t` the edit adds `(v · h_t) · u` to the residual stream,
+where `h_t` is the 3,584-d `down_proj` input, and nothing else changes. That is **linear in `v`**. With activations
+recorded from the model's own traces, split into looping tokens `R` and productive tokens `P`:
 
 ```
-LP-A   min_v  Σ_j |v_j|  +  C · Σ slack
-       s.t.   v · h_t ≤ −δ        t ∈ R    (push loop tokens away from u by at least δ)
-              |v · h_t| ≤ ε       t ∈ P    (leave productive tokens within ε)
+min_v  Σ_j |v_j|  +  C · Σ slack
+s.t.   v · h_t ≤ −δ        t ∈ R    (push looping tokens away from u by at least δ)
+       |v · h_t| ≤ ε       t ∈ P    (move productive tokens by at most ε)
 ```
 
 The L1 objective makes `v` sparse, so the LP chooses the neurons. For exactly `k` neurons, solve once, keep the top
@@ -34,20 +54,20 @@ HiGHS's optimum to within 0.2% in about a minute.
 
 ## What we did
 
-1. **Reproduced Astra's edit** ([results/reproduction](../results/reproduction/README.md)). Rebuilt it from the
-   released diff (sha256 match) and confirmed it is rank-1. Re-derived `u` from Astra's 4 text pairs (cos 1.0000) and
-   matched Astra's teacher-forced metric (−0.1032 vs. −0.1031). Built a vLLM eval harness that reproduces the logged
-   MATH-500 numbers within noise (Astra 50.0 vs. 48.1, base 7.0 vs. 7.9).
-2. **Collected loop data.** A 16-token-window duplicate detector finds loop onsets (median about 680 tokens into the
-   reasoning). We cached layer 15/19 activations for productive, loop-onset and in-loop tokens from the paper's released
-   base traces and from 512 of our own.
-3. **Swept 14 edits on a dev set** of 128 held-out practice problems ([results/dev_sweep](../results/dev_sweep/README.md)),
-   varying the source of `u` (Astra's or measured from real loops), the number of neurons (8–3,584), and loose vs.
-   tight protection of productive tokens (ε = 1.0 "shift" vs. 0.25 "sel"). Controls: a random direction, and
-   Astra's recipe run once without its search.
-4. **Confirmed on untouched data** ([results/benchmarks](../results/benchmarks/README.md)): 512 fresh practice
-   problems, GSM8K test, MATH-500 ×4, IFEval.
-5. **Analysis and baselines**: neuron overlap, blind push strength, and a steering-vector baseline.
+1. **Reproduced the agent edit** ([results/reproduction](../results/reproduction/README.md)). Rebuilt it from the
+   released diff (sha256 match) and confirmed it is rank-1. Re-derived `u` from the agent's 4 text pairs (cosine
+   1.0000) and matched the agent's own teacher-forced metric (−0.1032 vs. −0.1031). Built a vLLM eval harness that
+   reproduces the logged MATH-500 numbers within noise (agent edit 50.0 vs. 48.1, base 7.0 vs. 7.9).
+2. **Collected loop data.** A detector that flags repeated 16-token windows finds where loops start (median about 680
+   tokens into the reasoning). We cached layer 15/19 activations for productive tokens, loop starts and tokens inside
+   loops, from the paper's released base-model traces and from 512 of our own.
+3. **Swept 14 edits on the dev set** ([results/dev_sweep](../results/dev_sweep/README.md)), varying the direction
+   (agent's or measured), the number of neurons (8 to all 3,584), and broad vs. selective. Controls: a random
+   direction, and the agent's recipe applied once without its search.
+4. **Confirmed on untouched data** ([results/benchmarks](../results/benchmarks/README.md)): fresh practice, GSM8K test,
+   MATH-500 (4 samples per problem) and IFEval.
+5. **Analysis and baselines**: neuron overlap, push strength of the measured direction, and a steering-vector
+   baseline.
 
 ![dev sweep](../results/figures/dev_sweep.png)
 
@@ -55,58 +75,59 @@ HiGHS's optimum to within 0.2% in about a minute.
 
 ## Findings
 
-- **Given the diagnosis, the LP matches Astra with 8× fewer weights.** `shift_k8` is within about a point of Astra on
-  every benchmark, all within noise.
-- **The search was worth something, and the LP replaces it.** Astra's recipe run once without its search scores 44.5
-  on dev vs. Astra's 59.4. One LP solve on the same direction scores 62.5.
-- **The blind LP (no LLM) gets about 93% of the way.** It is about 3 points behind Astra on GSM8K test and MATH-500
-  and ties it on IFEval. The gap is the direction, not the strength: the blind push at 2× / 4× / 8× scores
-  54.7 / 54.7 / 55.5 on dev. The real-loop direction has cos ≈ 0.6 with Astra's.
-- **The fix is bias-like.** Fewer neurons was better (8 > 32 > 128). Edits restricted to fire only on loops did no
-  better than a near-constant push. At layer 15 the LP's 8 neurons are active on 89% of tokens (median neuron:
-  16%), and their push has a coefficient of variation of 0.17 (Astra's: 1.1). Loops are linearly detectable once
-  under way (probe AUC 0.93) but not at onset (0.73), so a selective edit fires too late to help.
-- **Different neurons, same fix.** `shift_k8` shares only 3/8 (L15) and 1/8 (L19) neurons with Astra's 64. Many
-  sparse solutions exist; what matters is the write along `u`.
-- **No collateral damage on IFEval.** Base fails IFEval mainly by looping inside its thinking (73% cut). All edits
-  fix that and land within about 1 SE of each other.
-- **Teacher-forced metrics mislead.** Astra's own branch-logprob metric ranked several edits wrongly, so every
-  selection here used generation.
+- **Given the agent's direction, the LP matches the agent edit with 8× fewer weights.** It is within about a point of
+  the agent edit on every benchmark, all within noise.
+- **The search was worth something, and the LP replaces it.** The agent's recipe applied once without its search
+  scores 44.5 on the dev set vs. 59.4 for the agent edit. One LP solve on the same direction scores 62.5.
+- **With the measured direction (no LLM at all), the LP gets about 93% of the way.** It is about 3 points behind the
+  agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes from the direction, not the push
+  strength: pushing 2×, 4× or 8× scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6
+  with the agent's.
+- **The fix acts like a constant offset.** Fewer neurons did better (8 > 32 > 128), and selective edits did no better
+  than broad ones. At layer 15 the LP's 8 neurons are active on 89% of tokens (a typical neuron: 16%), and their push
+  barely varies from token to token (coefficient of variation 0.17; the agent edit's: 1.1). A linear probe can spot a
+  loop once it is under way (AUC 0.93) but not at its start (0.73), so an edit that waits for a loop acts too late.
+- **Different neurons, same fix.** The LP edit shares only 3 of 8 (layer 15) and 1 of 8 (layer 19) neurons with the
+  agent's 64. Many sparse solutions exist; what matters is the push along `u`.
+- **No collateral damage on IFEval.** The base model fails IFEval mainly by looping inside its thinking (73%
+  truncated). Every edit fixes that, and they land within about 1 SE of each other.
+- **Teacher-forced metrics mislead.** The agent's own log-probability metric ranked several edits wrongly, so every
+  choice here was made by generating and grading answers.
 
 ## A steering vector does the same job
 
-Since the LP's best edit acts almost like a constant, we added its **mean** residual write
-(`mean_t(v·h_t) · u`, norm 0.89 at L15 and 0.67 at L19) as a fixed vector to the *unedited* model at layers 15 and 19,
-through a small vLLM plugin ([`src/wslp/eval/steer.py`](../src/wslp/eval/steer.py)):
+Since the best LP edit acts almost like a constant, we took its **average** push (`mean_t(v·h_t) · u`, norm 0.89 at
+layer 15 and 0.67 at layer 19) and added it as a fixed vector to the *unedited* model at layers 15 and 19, through a
+small vLLM plugin ([`src/wslp/eval/steer.py`](../src/wslp/eval/steer.py)):
 
-| Steering (unedited model) | Dev acc (128) | MATH-500 ×1 |
+| Steering vector added to the unedited model | Dev set (128) | MATH-500, 1 sample |
 |---|---|---|
-| 0.5 × `shift_k8` mean write | 51.6 | |
-| **1 × `shift_k8` mean write** | **57.8** | **50.8** (Astra 50.0, `shift_k8` 53.2 on the same seed) |
-| 2 × `shift_k8` mean write | 31.2 (loops stop, reasoning breaks) | |
-| 1 × Astra's mean write | 57.0 | |
-| *for reference: `shift_k8` weight edit / Astra / base* | *62.5 / 59.4 / 10.9* | |
+| 0.5 × LP edit's average push | 51.6 | |
+| **1 × LP edit's average push** | **57.8** | **50.8** (agent edit 50.0, LP edit 53.2, same seed) |
+| 2 × LP edit's average push | 31.2 (loops stop, reasoning breaks) | |
+| 1 × agent edit's average push | 57.0 | |
+| *for reference: LP edit / agent edit / base model* | *62.5 / 59.4 / 10.9* | |
 
-A constant push along `u` recovers essentially the whole fix: within noise of Astra and of `shift_k8`
-(−2.4 ± 1.9 vs. `shift_k8` on MATH-500). The strength matters and the window is narrow: half is too weak, double
-breaks reasoning. So the diagnosis is **a direction `u` and a dose**, and the per-token variation of the edit adds
-little. What the LP contributes is (a) choosing the dose from data in one solve, with no search, and (b) compiling
-that push into 8 neurons per layer of ordinary weights, so the fix ships inside a standard checkpoint with no
-inference-time hooks. Astra's search found the same dose by trial and error.
+A constant push along `u` recovers essentially the whole fix: within noise of both the agent edit and the LP edit
+(−2.4 ± 1.9 vs. the LP edit on MATH-500). The strength matters and the window is narrow: half is too weak, double
+breaks reasoning. So the diagnosis is **a direction and a dose**, and the token-by-token variation of the edit adds
+little. What the LP contributes is (a) choosing the dose from data in one solve, with no search, and (b) building that
+push into 8 neurons per layer of ordinary weights, so the fix ships inside a standard checkpoint with no
+inference-time hooks. The agent's search found the same dose by trial and error.
 
 ## Evaluation protocol
 
-All runs use the authors' `think35` protocol: vLLM, thinking on, T = 0.6, top-p 0.95, top-k 20, presence penalty 1.5,
-32,768 new tokens; the last `\boxed{}` is graded with math-verify. IFEval uses lm-eval's port of the official
-checkers, scored on the text after the last `</think>` (empty if the thinking was cut off). Differences are paired
-per problem against Astra.
+All runs use the authors' sampling settings (`think35`): vLLM, thinking on, temperature 0.6, top-p 0.95, top-k 20,
+presence penalty 1.5, up to 32,768 new tokens; the last `\boxed{}` answer is graded with math-verify. IFEval uses
+lm-eval's port of the official checkers, scored on the text after the last `</think>` (empty if the generation was
+truncated while thinking). Differences are paired per problem against the agent edit.
 
 ## Caveats
 
-- One model (Qwen3.5-0.8B) and one behavior (math reasoning loops). Generality is untested.
-- `shift_k8` was picked from 14 candidates on a 128-problem dev set, then confirmed on data never used for selection.
-  The headline numbers are from the confirmation sets only.
-- The harness is a reimplementation (the authors' `weightenv` package is unreleased); it matches the logged numbers
-  within sampling noise.
-- Not done: forward-pass-budget pipeline, blind layer choice, sampling-penalty and L2 baselines. See the status box
-  in [PLAN.md](PLAN.md).
+- One model (Qwen3.5-0.8B) and one behavior (loops in math reasoning). Generality is untested.
+- The LP edit was picked from 14 candidates on the 128-problem dev set, then confirmed on data never used for picking.
+  The headline numbers come from the confirmation sets only.
+- The eval harness is a reimplementation (the authors' `weightenv` package is unreleased); it matches the logged
+  numbers within sampling noise.
+- Not done: the fixed compute-budget pipeline, choosing layers without the agent's help, and sampling-penalty and L2
+  baselines. See the status box in [PLAN.md](PLAN.md).
