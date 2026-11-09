@@ -1,4 +1,4 @@
-# Fixing reasoning loops with one linear program: write-up
+# Write-up
 
 ## Background
 

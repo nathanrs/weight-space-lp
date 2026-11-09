@@ -81,6 +81,7 @@ for j, (b, pat) in enumerate(BENCH.items()):
 ax.set_xticks(range(len(BENCH)), list(BENCH))
 ax.set_ylabel("accuracy, %")
 ax.set_ylim(0, 85)
+ax.set_title("Accuracy: base model vs. the agent's 50-round edit vs. one LP solve")
 ax.legend(fontsize=8, loc="upper right", ncol=2)
 fig.tight_layout()
 fig.savefig(OUT / "benchmarks.png", dpi=160)
