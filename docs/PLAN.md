@@ -1,7 +1,7 @@
 # weight-space-lp: implementation plan
 
 > **Status (2026-11-07).** This is the plan as written before any experiment ran, kept unedited below this box as a
-> record. Results and the write-up are in the [README](../README.md); numbers live in [`results/`](../results/).
+> record. Results and the write-up are in [WRITEUP.md](WRITEUP.md); numbers live in [`results/`](../results/).
 >
 > | Item | Status | What actually happened |
 > |---|---|---|

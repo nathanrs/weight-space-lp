@@ -61,8 +61,8 @@ BENCH = {
 }
 MATH = {"base": ["e0_base_math500"], "astra_p50c": ["e0_astra_math500", "math500s1_astra_p50c"],
         "shift_k8": ["e0_shift_k8_math500", "math500s1_shift_k8"], "realshift_k8": ["math500_realshift_k8"]}
-MODELS = [("base", "base model", "lightgray"), ("astra_p50c", "Astra (130k weights)", "k"),
-          ("shift_k8", "LP shift_k8 (16k)", "C0"), ("realshift_k8", "blind LP realshift_k8 (16k)", "C2")]
+MODELS = [("base", "base model", "lightgray"), ("astra_p50c", "agent's edit (130k weights changed)", "k"),
+          ("shift_k8", "LP, agent's direction (16k)", "C0"), ("realshift_k8", "LP, direction from real loops (16k)", "C2")]
 fig, ax = plt.subplots(figsize=(8, 4.2))
 w = 0.2
 for j, (b, pat) in enumerate(BENCH.items()):
@@ -77,11 +77,10 @@ for j, (b, pat) in enumerate(BENCH.items()):
         se = 0 if m in ("astra_p50c", "base") else 100 * np.std([data[m][k] - ref[k] for k in ids], ddof=1) / np.sqrt(len(ids))
         ax.bar(j + (i - 1.5) * w, 100 * v.mean(), w, color=col, label=label if j == 0 else None,
                yerr=se, capsize=2, edgecolor="k", lw=0.4)
-        ax.text(j + (i - 1.5) * w, 100 * v.mean() + 1.5, f"{100 * v.mean():.0f}", ha="center", fontsize=7)
+        ax.text(j + (i - 1.5) * w, 100 * v.mean() + se + 1, f"{100 * v.mean():.0f}", ha="center", fontsize=7)
 ax.set_xticks(range(len(BENCH)), list(BENCH))
 ax.set_ylabel("accuracy, %")
-ax.set_ylim(0, 80)
-ax.set_title("Error bars: paired SE of the difference vs. Astra")
+ax.set_ylim(0, 85)
 ax.legend(fontsize=8, loc="upper right", ncol=2)
 fig.tight_layout()
 fig.savefig(OUT / "benchmarks.png", dpi=160)
