@@ -96,3 +96,7 @@ The problem, the agent's edit, the base traces and the eval protocol come from [
 by Rikiya Takehi, Jayden Teoh, Alex Zhang and Omar Khattab (MIT CSAIL), via their released logs
 ([RikiyaT/lm_understand-logs](https://github.com/RikiyaT/lm_understand-logs), CC BY 4.0). Their logs are
 fetched into `third_party/`, not redistributed here.
+
+## License
+
+MIT ([LICENSE](LICENSE)) for the code in this repo. The paper's logs keep their own CC BY 4.0 license.
