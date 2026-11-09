@@ -39,7 +39,7 @@ def totals(runs, sets=None) -> dict:
     return {"samples": n, "cut_share": cut / n, "mean_tokens": tok / n}
 
 
-FIXED = {"base": "Base model", "astra_p50c": "Agent edit", "recipe_nosearch": "Agent's recipe, no search",
+FIXED = {"base": "Base model", "astra_p50c": "Agent edit", "recipe_nosearch": "Agent's recipe on the measured direction, no search",
          "random_ctrl": "Random direction (control)"}
 HEADLINE = {"shift_k8": "LP, agent's direction", "realshift_k8": "LP, measured direction"}
 

@@ -13,7 +13,7 @@ Table built by `python scripts/paired_table.py`.
 |---|---|---|---|---|---|---|---|---|---|
 | Base model | `base` | 0 | 10.9 | 10.9 | 10.9 | +0.0 (0.0) | 0 / 0 | 89.1 | 29,868 |
 | Agent edit | `astra_p50c` | 130,188 | 70.3 | 48.4 | 59.4 | +48.4 (4.7) | 64 / 2 | 12.5 | 16,502 |
-| Agent's recipe, no search | `recipe_nosearch` | 130,152 | 53.1 | 35.9 | 44.5 | +33.6 (4.2) | 43 / 0 | 48.4 | 20,719 |
+| Agent's recipe on the measured direction, no search | `recipe_nosearch` | 130,152 | 53.1 | 35.9 | 44.5 | +33.6 (4.2) | 43 / 0 | 48.4 | 20,719 |
 | Random direction (control) | `random_ctrl` | 130,285 | 9.4 | 10.9 | 10.2 | -0.8 (2.1) | 3 / 4 | 92.2 | 30,661 |
 | LP, agent's direction, broad, 8 neurons/layer | `shift_k8` | 16,291 | 71.9 | 53.1 | 62.5 | +51.6 (4.6) | 67 / 1 | 21.9 | 14,501 |
 | LP, agent's direction, broad, 32 neurons/layer | `shift_k32` | 64,927 | 70.3 | 46.9 | 58.6 | +47.7 (4.6) | 62 / 1 | 25.0 | 14,278 |

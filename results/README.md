@@ -9,7 +9,7 @@ Tables use readable names; file and folder names use short IDs:
 | `shift_k<N>` / `sel_k<N>` | LP with the agent's direction, broad (ε = 1.0) / selective (ε = 0.25), N neurons per layer |
 | `lp_shift` / `lp_sel` | Same, with no neuron limit |
 | `real…` | Same LPs with the measured direction; `_d2` / `_d8` = push 2× / 8× the loop excess (default 4×) |
-| `recipe_nosearch`, `random_ctrl` | Agent's recipe without its search; random direction (control) |
+| `recipe_nosearch`, `random_ctrl` | Agent's recipe (column scoring, 6× rule) applied once to the measured direction, no search; random direction (control) |
 | `steer_<edit>_x<s>` | Unedited model plus s × that edit's average push as a constant vector |
 | `dev_a`, `final_practice` | Dev set (128 problems), fresh practice (512 problems) |
 

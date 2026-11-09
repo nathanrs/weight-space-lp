@@ -92,7 +92,8 @@ cosine with the agent's direction is about 0.6.
    - **broad** (ε = 1.0: productive tokens may move, so the edit becomes a near-constant push) vs. **selective**
      (ε = 0.25: the edit tries to act only on loops).
 
-   Controls: a random direction, and the agent's recipe applied once without its search. The pick was **broad, 8
+   Controls: a random direction, and the agent's recipe (its column scoring and 6× rule) applied once to the
+   measured direction, without search. The pick was **broad, 8
    neurons per layer**. "LP, agent's direction" and "LP, measured direction" below both mean that setting.
 4. **Confirmed on untouched data** ([results/benchmarks](../results/benchmarks/README.md)): 512 fresh practice
    problems never used to fit or pick anything, GSM8K test, MATH-500 (4 samples per problem) and IFEval.
@@ -107,8 +108,9 @@ cosine with the agent's direction is about 0.6.
 
 - **Given the agent's direction, the LP matches the agent edit with 8× fewer weights.** It is within about a point of
   the agent edit on every benchmark, all within noise.
-- **The search was worth something, and the LP replaces it.** The agent's recipe applied once without its search
-  scores 44.5 on the dev set vs. 59.4 for the agent edit. One LP solve on the same direction scores 62.5.
+- **On the same direction, the LP beats the agent's recipe.** The agent's recipe applied once to the measured
+  direction, without search, scores 44.5 on the dev set; one LP solve on that direction scores 54.7 with 8 neurons
+  per layer. On the agent's direction, one LP solve (62.5) does as well as the agent's searched edit (59.4).
 - **With the measured direction (no LLM, though still on the agent's layers 15 and 19), the LP gets about 93% of the
   way.** It is about 3 points behind the agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes
   from the direction, not the push strength: pushing looping tokens 2×, 4× or 8× their measured excess along `u`
