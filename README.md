@@ -14,8 +14,7 @@ The full write-up (method, findings, steering baseline, caveats) is in [docs/WRI
 Accuracy on held-out benchmarks (problems × samples each; the base model got 1 sample on MATH-500). Error bars are the paired SE of each edit's difference
 from the agent edit. The two LP edits differ only in where the loop direction comes from: the agent's, or measured
 from the model's own looping traces with no LLM involved. Exact numbers and the eval protocol are in
-[results/benchmarks](results/benchmarks/README.md); the write-up has a [terms table](docs/WRITEUP.md#terms) mapping
-these names to the file names.
+[results/benchmarks](results/benchmarks/README.md).
 
 A constant steering vector of the same size along the same direction works about as well (50.8 on MATH-500). So the
 fix is "push away from one direction by the right amount", and the LP's contribution is finding that amount in one

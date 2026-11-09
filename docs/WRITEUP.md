@@ -9,26 +9,6 @@ took MATH-500 from 7.9% to 48.1% in the authors' logs. That edit turns out to be
 state along a single direction. Once you know that direction, choosing *which neurons and how much* is a linear
 program. This project tests whether one LP solve can stand in for the agent's search.
 
-## Terms
-
-| Term | Meaning | Name in files |
-|---|---|---|
-| Agent edit | The agent's final edit after 50 rounds (its run `p50c`) | `astra_p50c` |
-| Loop direction `u` | The hidden-state direction the edit pushes against | |
-| Agent's direction | `u` as the agent built it: the mean difference between 4 hand-written repetitive and productive texts | `shift_*`, `sel_*`, `lp_*` |
-| Measured direction | `u` measured from the model's own traces: mean activation on looping tokens minus productive tokens. No LLM involved | `real*` |
-| Looping / productive tokens | Tokens inside a detected loop vs. tokens of normal reasoning | `R` / `P` |
-| Broad | The LP may move productive tokens by up to ε = 1.0, so the edit becomes a near-constant push | `shift` |
-| Selective | Tight bound ε = 0.25, so the edit tries to act only on looping tokens | `sel` |
-| Neurons per layer | How many `down_proj` input neurons the edit may touch in each of layers 15 and 19 | `_k8` = 8 |
-| Push strength | For the measured direction: how far looping tokens are pushed, as a multiple of their measured excess along `u` (default 4×) | `_d2`, `_d8` |
-| Dev set | 128 held-out practice problems (64 GSM8K-train, 64 MATH-train) used to pick an edit | `dev_a` |
-| Fresh practice | 512 more practice problems never used to fit or pick anything | `final_practice` |
-| Truncated | The generation hit the 32,768-token limit, almost always because it was stuck in a loop | "cut" |
-
-The two headline edits are **LP, agent's direction** (`shift_k8`: broad, 8 neurons/layer) and **LP, measured
-direction** (`realshift_k8`: the same LP with the measured direction).
-
 ## Why it is a linear program
 
 The agent's edit to `mlp.down_proj` in layers 15 and 19 is
@@ -61,11 +41,18 @@ HiGHS's optimum to within 0.2% in about a minute.
 2. **Collected loop data.** A detector that flags repeated 16-token windows finds where loops start (median about 680
    tokens into the reasoning). We cached layer 15/19 activations for productive tokens, loop starts and tokens inside
    loops, from the paper's released base-model traces and from 512 of our own.
-3. **Swept 14 edits on the dev set** ([results/dev_sweep](../results/dev_sweep/README.md)), varying the direction
-   (agent's or measured), the number of neurons (8 to all 3,584), and broad vs. selective. Controls: a random
-   direction, and the agent's recipe applied once without its search.
-4. **Confirmed on untouched data** ([results/benchmarks](../results/benchmarks/README.md)): fresh practice, GSM8K test,
-   MATH-500 (4 samples per problem) and IFEval.
+3. **Swept 14 edits on a dev set** of 128 held-out practice problems
+   ([results/dev_sweep](../results/dev_sweep/README.md)), varying three things:
+   - the direction: the **agent's**, or one **measured** from the model's own traces (mean activation on looping
+     tokens minus productive tokens), with no LLM involved;
+   - the number of neurons per layer, from 8 to all 3,584;
+   - **broad** (ε = 1.0: productive tokens may move, so the edit becomes a near-constant push) vs. **selective**
+     (ε = 0.25: the edit tries to act only on loops).
+
+   Controls: a random direction, and the agent's recipe applied once without its search. The pick was **broad, 8
+   neurons per layer**. "LP, agent's direction" and "LP, measured direction" below both mean that setting.
+4. **Confirmed on untouched data** ([results/benchmarks](../results/benchmarks/README.md)): 512 fresh practice
+   problems never used to fit or pick anything, GSM8K test, MATH-500 (4 samples per problem) and IFEval.
 5. **Analysis and baselines**: neuron overlap, push strength of the measured direction, and a steering-vector
    baseline.
 
@@ -81,7 +68,7 @@ HiGHS's optimum to within 0.2% in about a minute.
   scores 44.5 on the dev set vs. 59.4 for the agent edit. One LP solve on the same direction scores 62.5.
 - **With the measured direction (no LLM at all), the LP gets about 93% of the way.** It is about 3 points behind the
   agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes from the direction, not the push
-  strength: pushing 2×, 4× or 8× scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6
+  strength: pushing looping tokens 2×, 4× or 8× their measured excess along `u` scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6
   with the agent's.
 - **The fix acts like a constant offset.** Fewer neurons did better (8 > 32 > 128), and selective edits did no better
   than broad ones. At layer 15 the LP's 8 neurons are active on 89% of tokens (a typical neuron: 16%), and their push
@@ -118,7 +105,8 @@ inference-time hooks. The agent's search found the same dose by trial and error.
 ## Evaluation protocol
 
 All runs use the authors' sampling settings (`think35`): vLLM, thinking on, temperature 0.6, top-p 0.95, top-k 20,
-presence penalty 1.5, up to 32,768 new tokens; the last `\boxed{}` answer is graded with math-verify. IFEval uses
+presence penalty 1.5, up to 32,768 new tokens (a generation that hits the limit is *truncated*, almost always
+because it is stuck in a loop); the last `\boxed{}` answer is graded with math-verify. IFEval uses
 lm-eval's port of the official checkers, scored on the text after the last `</think>` (empty if the generation was
 truncated while thinking). Differences are paired per problem against the agent edit.
 

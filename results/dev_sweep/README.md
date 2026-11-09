@@ -4,7 +4,7 @@ Dev set: 128 held-out practice problems (64 GSM8K-train, 64 MATH-train), 1 sampl
 with a 32,768-token limit. Every edit is compared to the base model on the same problems. The LP edit used in the
 headline ("LP, agent's direction, broad, 8 neurons/layer") was picked here from 14 candidates, so differences on this
 set are only suggestive; the confirmation is in [benchmarks](../benchmarks/README.md). Terms (broad, selective,
-measured direction, push) are defined in the [write-up](../../docs/WRITEUP.md#terms). Rescues / losses = problems
+measured direction, push) are defined in the [write-up](../../docs/WRITEUP.md#what-we-did); file IDs in [results/README.md](../README.md). Rescues / losses = problems
 the edit solves that the base model doesn't, and vice versa.
 
 Table built by `python scripts/paired_table.py`.

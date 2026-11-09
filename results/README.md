@@ -1,7 +1,19 @@
 # Results
 
-Names in tables are readable ("LP, agent's direction"); file and folder names use short IDs (`shift_k8`). The
-[terms table](../docs/WRITEUP.md#terms) in the write-up maps one to the other.
+Tables use readable names; file and folder names use short IDs:
+
+| ID | Meaning |
+|---|---|
+| `base` | Base model |
+| `astra_p50c` | Agent edit (the agent's run `p50c`, after 50 rounds) |
+| `shift_k<N>` / `sel_k<N>` | LP with the agent's direction, broad (ε = 1.0) / selective (ε = 0.25), N neurons per layer |
+| `lp_shift` / `lp_sel` | Same, with no neuron limit |
+| `real…` | Same LPs with the measured direction; `_d2` / `_d8` = push 2× / 8× the loop excess (default 4×) |
+| `recipe_nosearch`, `random_ctrl` | Agent's recipe without its search; random direction (control) |
+| `steer_<edit>_x<s>` | Unedited model plus s × that edit's average push as a constant vector |
+| `dev_a`, `final_practice` | Dev set (128 problems), fresh practice (512 problems) |
+
+The headline edits are `shift_k8` ("LP, agent's direction") and `realshift_k8` ("LP, measured direction").
 
 | Folder | What | Key file |
 |---|---|---|
