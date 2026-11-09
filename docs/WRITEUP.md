@@ -46,7 +46,7 @@ HiGHS's optimum to within 0.2% in about a minute.
 3. **Swept 14 edits on a dev set** of 128 held-out practice problems
    ([results/dev_sweep](../results/dev_sweep/README.md)), varying three things:
    - the direction: the **agent's**, or one **measured** from the model's own traces (mean activation on looping
-     tokens minus productive tokens), with no LLM involved;
+     tokens minus productive tokens), with no LLM involved (the layers, 15 and 19, are still the agent's choice);
    - the number of neurons per layer, from 8 to all 3,584;
    - **broad** (ε = 1.0: productive tokens may move, so the edit becomes a near-constant push) vs. **selective**
      (ε = 0.25: the edit tries to act only on loops).
@@ -68,7 +68,8 @@ HiGHS's optimum to within 0.2% in about a minute.
   the agent edit on every benchmark, all within noise.
 - **The search was worth something, and the LP replaces it.** The agent's recipe applied once without its search
   scores 44.5 on the dev set vs. 59.4 for the agent edit. One LP solve on the same direction scores 62.5.
-- **With the measured direction (no LLM at all), the LP gets about 93% of the way.** It is about 3 points behind the
+- **With the measured direction (no LLM, though still on the agent's layers 15 and 19), the LP gets about 93% of the
+  way.** It is about 3 points behind the
   agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes from the direction, not the push
   strength: pushing looping tokens 2×, 4× or 8× their measured excess along `u` scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6
   with the agent's.
