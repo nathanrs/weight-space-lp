@@ -6,22 +6,47 @@ In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-
 [logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)), an LLM agent (OpenAI's "Astra") hand-edited
 Qwen3.5-0.8B's weights to stop it from looping while it thinks. It could inspect the weights freely but had a budget
 of 50 forward passes, each a batched run of the model (about 64 sequences on average) on practice problems or texts of
-its choosing, with no gradients. The run took 158 turns and about 16 hours of wall-clock time (20.3 hours in the
-logs, including a 4.7-hour outage). Its final edit took MATH-500 from 7.9% to 48.1% in the authors' logs. That edit turns out to be **rank-1**: it pushes the hidden
-state along a single direction. Once you know that direction, choosing *which neurons and how much* is a linear
-program. This project tests whether one LP solve can stand in for the agent's search.
+its choosing, with no gradients. The run took 158 turns and about 16 hours of wall-clock time (20.3 hours in the logs,
+including a 4.7-hour outage). Its final edit took MATH-500 from 7.9% to 48.1% in the authors' logs.
 
-## Why it is a linear program
+That edit turns out to be **rank-1**: it pushes the hidden state along a single direction. Once you know that
+direction, choosing *which neurons and how much* is a linear program. This project tests whether one LP solve can
+stand in for the agent's search.
 
-The agent's edit to `mlp.down_proj` in layers 15 and 19 is
+## The agent's edit
+
+**Shapes.** Qwen3.5-0.8B's residual stream is 1,024-d per token. Each layer's MLP ends with `down_proj`, a
+`[1024, 3584]` matrix `W` that maps the 3,584 neuron activations `h` to the layer's 1,024-d write:
+`W·h = Σ_j h_j·w_j`, where column `w_j` is neuron `j`'s write vector. The MLP acts on each token separately.
+
+**The direction.** The agent wrote 4 pairs of short texts (about 100–150 tokens each): a piece of productive reasoning
+and a looping version of it. It ran all 8, averaged each layer's output over the last 36 tokens of each text, and took
+repetitive minus productive, averaged over the 4 pairs and normalized. That is the loop direction `u` (`[1024]`, one
+per layer). We re-derived it from the released request file with cosine 1.0000.
+
+**The edit.** In layers 15 and 19:
 
 ```
-W = W0 − 6 · u (mask64 ⊙ uᵀW0)      i.e.  ΔW = u vᵀ,  v_j = −6·uᵀw_j on 64 chosen neurons, 0 elsewhere
+w_j  →  w_j − 6 · (uᵀw_j) · u        for 64 chosen columns; others unchanged
 ```
 
-`u` is a unit vector in the 1024-d hidden state. At token `t` the edit adds `(v · h_t) · u` to the residual stream,
-where `h_t` is the 3,584-d `down_proj` input, and nothing else changes. That is **linear in `v`**. With activations
-recorded from the model's own traces, split into looping tokens `R` and productive tokens `P`:
+The 64 columns are the neurons with the largest `(uᵀw_j) · (mean h_j on repetitive − mean h_j on productive text)`:
+the ones that add the most `u` on looping text compared with productive text.
+
+`uᵀw_j` is how much neuron `j` writes along `u`. Subtracting 1× of it would remove that component exactly (directional
+ablation). Subtracting 6× flips and amplifies it: a neuron that wrote `+a` along `u` now writes `−5a`, so it actively
+pushes the hidden state away from the loop direction whenever it fires. Every column changes by a multiple of `u`, so
+
+```
+ΔW = u vᵀ,    v_j = −6·uᵀw_j on the 64 chosen neurons, 0 elsewhere
+```
+
+and at token `t` the edit adds `(v · h_t) · u` to the residual stream, nothing else.
+
+## Why choosing `v` is a linear program
+
+The push `v · h_t` is **linear in `v`**. With activations recorded from the model's own traces, split into looping
+tokens `R` and productive tokens `P`:
 
 ```
 min_v  Σ_j |v_j|  +  C · Σ slack
@@ -29,10 +54,23 @@ s.t.   v · h_t ≤ −δ        t ∈ R    (push looping tokens away from u by 
        |v · h_t| ≤ ε       t ∈ P    (move productive tokens by at most ε)
 ```
 
-The L1 objective makes `v` sparse, so the LP chooses the neurons. For exactly `k` neurons, solve once, keep the top
-`k` by `|v_j|·std(h_j)`, then re-solve on that support. HiGHS took over 20 minutes per solve on these dense rows, so
-[`src/wslp/lp.py`](../src/wslp/lp.py) uses **PDHG** (Chambolle–Pock, the algorithm under PDLP) on MPS/CUDA. It reaches
-HiGHS's optimum to within 0.2% in about a minute.
+The L1 objective makes `v` sparse, so the LP chooses the neurons. Slack variables (penalty `C`) absorb constraints no
+`v` can meet. For exactly `k` neurons, solve once, keep the top `k` by `|v_j|·std(h_j)`, then re-solve on that
+support. HiGHS took over 20 minutes per solve on these dense rows, so [`src/wslp/lp.py`](../src/wslp/lp.py) uses
+**PDHG** (Chambolle–Pock, the algorithm under PDLP) on MPS/CUDA. It reaches HiGHS's optimum to within 0.2% in about a
+minute.
+
+## Who decides what
+
+| | Direction `u` | Layers | Neurons and amounts `v` | Testing |
+|---|---|---|---|---|
+| Agent edit | 4 hand-written text pairs | agent | fixed 6× rule on 64 columns | 50-pass search |
+| LP, agent's direction | agent's | agent's | LP | none |
+| LP, measured direction | difference of means on real loops | agent's | LP | none |
+
+The measured direction uses the same difference-of-means recipe as the agent, but on real traces instead of matched
+pairs, so it also picks up whatever else differs between early and late reasoning (position, topic drift). Its
+cosine with the agent's direction is about 0.6.
 
 ## What we did
 
@@ -40,9 +78,12 @@ HiGHS's optimum to within 0.2% in about a minute.
    released diff (sha256 match) and confirmed it is rank-1. Re-derived `u` from the agent's 4 text pairs (cosine
    1.0000) and matched the agent's own teacher-forced metric (−0.1032 vs. −0.1031). Built a vLLM eval harness that
    reproduces the logged MATH-500 numbers within noise (agent edit 50.0 vs. 48.1, base 7.0 vs. 7.9).
-2. **Collected loop data.** A detector that flags repeated 16-token windows finds where loops start (median about 680
-   tokens into the reasoning). We cached layer 15/19 activations for productive tokens, loop starts and tokens inside
-   loops, from the paper's released base-model traces and from 512 of our own.
+2. **Collected loop data** ([`src/wslp/loops.py`](../src/wslp/loops.py)). A token is a *duplicate* if the 16-token
+   window ending at it already appeared earlier in the response. A loop *starts* at the first point after which at
+   least 80% of the remaining tokens are duplicates (median about 680 tokens into the reasoning). Looping tokens are
+   duplicates 64+ tokens after the start; productive tokens are those 256+ tokens before it, or anywhere in a trace
+   that finished normally. We cached layer 15/19 activations for these tokens (and for loop starts) from the paper's
+   released base-model traces and from 512 of our own.
 3. **Swept 14 edits on a dev set** of 128 held-out practice problems
    ([results/dev_sweep](../results/dev_sweep/README.md)), varying three things:
    - the direction: the **agent's**, or one **measured** from the model's own traces (mean activation on looping
@@ -69,10 +110,9 @@ HiGHS's optimum to within 0.2% in about a minute.
 - **The search was worth something, and the LP replaces it.** The agent's recipe applied once without its search
   scores 44.5 on the dev set vs. 59.4 for the agent edit. One LP solve on the same direction scores 62.5.
 - **With the measured direction (no LLM, though still on the agent's layers 15 and 19), the LP gets about 93% of the
-  way.** It is about 3 points behind the
-  agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes from the direction, not the push
-  strength: pushing looping tokens 2×, 4× or 8× their measured excess along `u` scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6
-  with the agent's.
+  way.** It is about 3 points behind the agent edit on GSM8K test and MATH-500 and ties it on IFEval. The gap comes
+  from the direction, not the push strength: pushing looping tokens 2×, 4× or 8× their measured excess along `u`
+  scores 54.7, 54.7 and 55.5 on the dev set. The measured direction has cosine ≈ 0.6 with the agent's.
 - **The fix acts like a constant offset.** Fewer neurons did better (8 > 32 > 128), and selective edits did no better
   than broad ones. At layer 15 the LP's 8 neurons are active on 89% of tokens (a typical neuron: 16%), and their push
   barely varies from token to token (coefficient of variation 0.17; the agent edit's: 1.1). A linear probe can spot a

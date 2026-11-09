@@ -1,9 +1,14 @@
 # weight-space-lp
 
-Qwen3.5-0.8B often gets stuck repeating itself while it thinks. In [*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/)
-(Takehi et al., MIT CSAIL), an LLM agent fixed this by hand-editing the model's weights, testing its ideas with a
-budget of 50 batched runs of the model ([logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)). This repo computes an equivalent edit with a
-single linear-program solve: about a minute on a laptop, changing 8× fewer weights.
+Qwen3.5-0.8B often gets stuck repeating itself while it thinks. In
+[*Sparks of Weight-Space Programming*](https://rikiyat.github.io/blog/weight-space-programming/) (Takehi et al., MIT CSAIL), an LLM agent fixed
+this by hand-editing the model's weights, testing its ideas with a budget of 50 batched runs of the model
+([logs](https://github.com/RikiyaT/lm_understand-logs/tree/main/exp8_math)). Its fix turned out to be simple: in layers 15 and 19,
+push the hidden state away from one "loop direction".
+
+Given that direction, this repo picks which neurons to change and by how much with a single linear-program solve
+(about a minute on a laptop). The result matches the agent's edit while changing 8× fewer weights. A second version
+also measures the direction from the model's own loops, with no LLM, and gets about 93% of the way.
 
 The full write-up (method, findings, steering baseline, caveats) is in [docs/WRITEUP.md](docs/WRITEUP.md).
 
@@ -11,9 +16,10 @@ The full write-up (method, findings, steering baseline, caveats) is in [docs/WRI
 
 ![benchmarks](results/figures/benchmarks.png)
 
-Accuracy on held-out benchmarks (problems × samples each; the base model got 1 sample on MATH-500). Error bars are the paired SE of each edit's difference
-from the agent edit. The two LP edits differ only in where the loop direction comes from: the agent's, or measured
-from the model's own looping traces with no LLM involved (layers 15 and 19 are still taken from the agent). Exact numbers and the eval protocol are in
+Accuracy on held-out benchmarks (problems × samples each; the base model got 1 sample on MATH-500). Error bars are the
+paired SE of each edit's difference from the agent edit. The two LP edits differ only in where the loop direction
+comes from: the agent's, or measured from the model's own looping traces with no LLM involved (layers 15 and 19 are
+still taken from the agent). Exact numbers and the eval protocol are in
 [results/benchmarks](results/benchmarks/README.md).
 
 A constant steering vector of the same size along the same direction works about as well (50.8 on MATH-500). So the
@@ -22,9 +28,19 @@ solve and baking it into ordinary weights.
 
 ## How it works
 
-The agent's edit to `mlp.down_proj` in layers 15 and 19 is rank-1: `ΔW = u vᵀ`, where `u` is a direction in the
-hidden state (the loop direction). At token `t` it adds `(v · h_t) · u` to the residual stream, which is linear in `v`. Given activations
-`h_t` from the model's own traces, split into looping tokens `R` and productive tokens `P`, choosing `v` is an LP:
+**The matrix being edited.** Each layer's MLP ends with `down_proj`, a `[1024, 3584]` matrix. At every token it takes
+the 3,584 neuron activations `h` and writes `W·h = Σ_j h_j·w_j` into the 1,024-d residual stream: each neuron `j` adds
+its own column `w_j`, scaled by how strongly it fires.
+
+**The agent's edit.** The agent wrote 4 pairs of short texts, each a piece of productive reasoning and a looping
+version of it, and took the difference between the model's average hidden state on the two. That difference is the
+loop direction `u` (`[1024]`). It then took the 64 columns per layer that add the most `u` on looping text compared with
+productive text, and subtracted 6× each column's component along `u`. Every column changes by a multiple of the same `u`, so the change is rank-1:
+`ΔW = u vᵀ`, with one number `v_j` per neuron.
+
+**The LP.** At token `t` the edit adds `(v · h_t) · u` to the residual stream: a push along `u` whose size is linear
+in `v`. So given `u`, and activations recorded from the model's own traces split into looping tokens `R` and productive
+tokens `P`, choosing `v` is a linear program:
 
 ```
 min_v  Σ_j |v_j|  +  C · Σ slack
@@ -32,7 +48,9 @@ s.t.   v · h_t ≤ −δ     t ∈ R    (push looping tokens away from u)
        |v · h_t| ≤ ε    t ∈ P    (barely move productive tokens)
 ```
 
-The L1 objective keeps `v` sparse, so the LP also picks the neurons (8 per layer for the edit above). It is solved
+The L1 objective keeps `v` sparse, so the LP also picks the neurons: 8 per layer for the edit above. This replaces
+the agent's choice of columns and amounts, and its search. The measured version also replaces the text pairs: its `u`
+is the difference between the average hidden state on looping and productive tokens in real traces. The LP is solved
 with PDHG on MPS/CUDA ([`src/wslp/lp.py`](src/wslp/lp.py)).
 
 ## Reproduce
